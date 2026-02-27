@@ -1,14 +1,35 @@
 import {
   isRouteErrorResponse,
+  Link,
   Links,
   Meta,
   Outlet,
   Scripts,
   ScrollRestoration,
+  useLoaderData,
 } from "react-router";
 
 import type { Route } from "./+types/root";
+import { createAuth } from "~/lib/auth/auth.server";
 import "./app.css";
+
+export async function loader({ request, context }: Route.LoaderArgs) {
+  const { cloudflare } = context as { cloudflare: { env: Env } };
+  let user: { id: string; name: string | null } | null = null;
+  try {
+    const auth = createAuth(cloudflare.env.DB, {
+      BETTER_AUTH_SECRET: cloudflare.env.BETTER_AUTH_SECRET,
+      BETTER_AUTH_URL: cloudflare.env.BETTER_AUTH_URL,
+    });
+    const session = await auth.api.getSession({ headers: request.headers });
+    if (session?.user) {
+      user = { id: session.user.id, name: session.user.name };
+    }
+  } catch {
+    /* not signed in */
+  }
+  return { user };
+}
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -16,10 +37,6 @@ export const links: Route.LinksFunction = () => [
     rel: "preconnect",
     href: "https://fonts.gstatic.com",
     crossOrigin: "anonymous",
-  },
-  {
-    rel: "stylesheet",
-    href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
   },
 ];
 
@@ -42,7 +59,27 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  return <Outlet />;
+  const { user } = useLoaderData<typeof loader>();
+
+  return (
+    <>
+      <header className="flex items-center justify-end px-4 py-2">
+        {user ? (
+          <span className="text-sm text-muted-foreground">
+            {user.name || "Player"}
+          </span>
+        ) : (
+          <Link
+            to="/auth/signin"
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Sign in
+          </Link>
+        )}
+      </header>
+      <Outlet context={{ user }} />
+    </>
+  );
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {

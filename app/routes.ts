@@ -12,4 +12,5 @@ export default [
   route("api/sync/migrate", "routes/api.sync.migrate.ts"),
   route("settings", "routes/settings.tsx"),
   route("api/settings", "routes/api.settings.ts"),
+  route("stats", "routes/stats.tsx"),
 ] satisfies RouteConfig;

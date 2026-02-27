@@ -6,6 +6,7 @@ interface BoardProps {
   game: GameState;
   settings: GameSettings;
   onSelectCell: (index: number) => void;
+  hintCells?: number[];
 }
 
 const EMPTY_SET = new Set<number>();
@@ -22,7 +23,8 @@ function getBox(index: number) {
   return Math.floor(getRow(index) / 3) * 3 + Math.floor(getCol(index) / 3);
 }
 
-export function Board({ game, settings, onSelectCell }: BoardProps) {
+export function Board({ game, settings, onSelectCell, hintCells }: BoardProps) {
+  const hintCellSet = hintCells ? new Set(hintCells) : null;
   const selectedRow =
     game.selectedCell !== null ? getRow(game.selectedCell) : -1;
   const selectedCol =
@@ -71,6 +73,7 @@ export function Board({ game, settings, onSelectCell }: BoardProps) {
             isSelected={isSelected}
             isHighlighted={isHighlighted}
             isError={isError}
+            isHint={hintCellSet !== null && hintCellSet.has(index)}
             isSameRow={isSameRow}
             isSameCol={isSameCol}
             isSameBox={isSameBox}

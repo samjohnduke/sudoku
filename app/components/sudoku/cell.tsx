@@ -7,6 +7,7 @@ interface CellProps {
   isSelected: boolean;
   isHighlighted: boolean;
   isError: boolean;
+  isHint: boolean;
   isSameRow: boolean;
   isSameCol: boolean;
   isSameBox: boolean;
@@ -34,6 +35,7 @@ export function Cell({
   isSelected,
   isHighlighted,
   isError,
+  isHint,
   isSameRow,
   isSameCol,
   isSameBox,
@@ -63,11 +65,13 @@ export function Cell({
         // Background states (ordered by priority)
         isSelected
           ? "bg-primary/15"
-          : isHighlighted
-            ? "bg-primary/10"
-            : (isSameRow || isSameCol || isSameBox)
-              ? "bg-primary/5"
-              : "",
+          : isHint
+            ? "bg-amber-200/50 dark:bg-amber-500/30"
+            : isHighlighted
+              ? "bg-primary/10"
+              : (isSameRow || isSameCol || isSameBox)
+                ? "bg-primary/5"
+                : "",
         // Text states
         isError && "text-destructive",
         !isError && isInitial && "font-bold text-foreground",

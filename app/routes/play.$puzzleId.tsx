@@ -22,6 +22,31 @@ import {
   CardFooter,
 } from "~/components/ui/card";
 import { cn } from "~/lib/utils";
+import { getHint } from "~/lib/hints";
+import type { SolveStep, Technique } from "../../lib/sudoku/types";
+
+// ---------------------------------------------------------------------------
+// Technique display names
+// ---------------------------------------------------------------------------
+
+const TECHNIQUE_DISPLAY_NAMES: Record<Technique, string> = {
+  "naked-single": "Naked Single",
+  "hidden-single": "Hidden Single",
+  "naked-pair": "Naked Pair",
+  "naked-triple": "Naked Triple",
+  "naked-quad": "Naked Quad",
+  "hidden-pair": "Hidden Pair",
+  "hidden-triple": "Hidden Triple",
+  "hidden-quad": "Hidden Quad",
+  "pointing-pairs": "Pointing Pairs",
+  "box-line-reduction": "Box/Line Reduction",
+  "x-wing": "X-Wing",
+  "swordfish": "Swordfish",
+  "xy-wing": "XY-Wing",
+  "simple-coloring": "Simple Coloring",
+  "jellyfish": "Jellyfish",
+  "unique-rectangle": "Unique Rectangle",
+};
 
 // ---------------------------------------------------------------------------
 // Loader
@@ -180,6 +205,29 @@ export default function PlayRoute() {
     resumeState: progress,
   });
 
+  // --- Hint state ---
+  const [hint, setHint] = useState<SolveStep | null>(null);
+  const [hintCells, setHintCells] = useState<number[]>([]);
+
+  const handleHint = useCallback(() => {
+    const step = getHint(game.current);
+    if (step) {
+      setHint(step);
+      // Convert [row, col] pairs to flat indices
+      setHintCells(step.cells.map(([r, c]) => r * 9 + c));
+    } else {
+      setHint(null);
+      setHintCells([]);
+    }
+  }, [game.current]);
+
+  // Clear hint when user makes a move (detect by board state change)
+  const boardKey = game.current.join("");
+  useEffect(() => {
+    setHint(null);
+    setHintCells([]);
+  }, [boardKey]);
+
   // Also try to load localStorage progress on first mount if no server progress
   useEffect(() => {
     if (progress) return;
@@ -243,7 +291,43 @@ export default function PlayRoute() {
         ) : null}
 
         {/* Board */}
-        <Board game={game} settings={settings} onSelectCell={selectCell} />
+        <Board game={game} settings={settings} onSelectCell={selectCell} hintCells={hintCells} />
+
+        {/* Hint button + hint card */}
+        {!game.isComplete && settings.hintsEnabled ? (
+          <div className="w-full max-w-md flex flex-col gap-3">
+            {!hint ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className="self-center"
+                onClick={handleHint}
+              >
+                Hint
+              </Button>
+            ) : null}
+            {hint ? (
+              <Card className="border-amber-300 dark:border-amber-600 bg-amber-50 dark:bg-amber-950/30">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base">
+                    {TECHNIQUE_DISPLAY_NAMES[hint.technique]}
+                  </CardTitle>
+                  <CardDescription className="text-sm">
+                    {hint.description}
+                  </CardDescription>
+                </CardHeader>
+                <CardFooter className="pt-0 pb-3">
+                  <Link
+                    to={`/bible/${hint.technique}`}
+                    className="text-xs text-primary hover:underline"
+                  >
+                    Learn this technique &rarr;
+                  </Link>
+                </CardFooter>
+              </Card>
+            ) : null}
+          </div>
+        ) : null}
 
         {/* Number Pad */}
         {!game.isComplete ? (

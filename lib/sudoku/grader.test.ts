@@ -92,4 +92,34 @@ describe("gradePuzzle", () => {
     const result = gradePuzzle(grid);
     expect(result.solved).toBe(false);
   });
+
+  it("difficulty score increases as puzzles get harder", () => {
+    // Easy: only naked/hidden singles needed
+    const easyPuzzle =
+      "530070000600195000098000060800060003400803001700020006060000280000419005000080079";
+    const easyResult = gradePuzzle(parseGrid(easyPuzzle));
+
+    // Hard: requires advanced techniques beyond naked/hidden singles
+    const hardPuzzle =
+      "000801000000000043500000000000070800000000100020030000600000075003400000000200600";
+    const hardResult = gradePuzzle(parseGrid(hardPuzzle));
+
+    // Hard puzzle should score strictly higher than easy
+    expect(hardResult.score).toBeGreaterThan(easyResult.score);
+  });
+
+  it("puzzle requiring only naked singles should score lower than one requiring X-Wing level techniques", () => {
+    // Simple puzzle: naked/hidden singles only
+    const simplePuzzle =
+      "530070000600195000098000060800060003400803001700020006060000280000419005000080079";
+    const simpleResult = gradePuzzle(parseGrid(simplePuzzle));
+
+    // Hard puzzle that requires advanced techniques (pointing pairs, naked pairs, etc.)
+    const hardPuzzle =
+      "000801000000000043500000000000070800000000100020030000600000075003400000000200600";
+    const hardResult = gradePuzzle(parseGrid(hardPuzzle));
+
+    // Hard puzzle should score higher than the simple one
+    expect(hardResult.score).toBeGreaterThan(simpleResult.score);
+  });
 });

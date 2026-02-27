@@ -5,5 +5,12 @@
   "main": "./workers/app.ts",
   "vars": {
     "VALUE_FROM_CLOUDFLARE": "Hello from Cloudflare"
-  }
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "supersudoku-db",
+      "database_id": "841e189d-56de-48ae-ab6a-5cfb3b604bb7"
+    }
+  ]
 }

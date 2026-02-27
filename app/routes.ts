@@ -6,4 +6,5 @@ export default [
   route("api/puzzle/random", "routes/api.puzzle.random.ts"),
   route("api/auth/*", "routes/api.auth.$.ts"),
   route("api/game/save", "routes/api.game.save.ts"),
+  route("bible", "routes/bible.tsx"),
 ] satisfies RouteConfig;

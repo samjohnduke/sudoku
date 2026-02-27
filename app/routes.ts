@@ -7,4 +7,9 @@ export default [
   route("api/auth/*", "routes/api.auth.$.ts"),
   route("api/game/save", "routes/api.game.save.ts"),
   route("bible", "routes/bible.tsx"),
+  route("bible/:technique", "routes/bible.$technique.tsx"),
+  route("auth/signin", "routes/auth.signin.tsx"),
+  route("api/sync/migrate", "routes/api.sync.migrate.ts"),
+  route("settings", "routes/settings.tsx"),
+  route("api/settings", "routes/api.settings.ts"),
 ] satisfies RouteConfig;

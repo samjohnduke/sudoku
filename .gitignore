@@ -13,3 +13,5 @@
 .dev.vars*
 worker-configuration.d.ts
 
+# Generated puzzle files
+test-puzzles.json

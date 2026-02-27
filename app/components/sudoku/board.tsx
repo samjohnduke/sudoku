@@ -41,7 +41,7 @@ export function Board({ game, settings, onSelectCell, hintCells }: BoardProps) {
       className={cn(
         "grid grid-cols-9",
         "border-2 border-foreground/40 rounded-lg overflow-hidden",
-        "max-w-md mx-auto aspect-square",
+        "w-full max-w-md mx-auto aspect-square",
       )}
       style={{ containerType: "inline-size" }}
     >

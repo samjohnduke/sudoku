@@ -132,7 +132,7 @@ export function TutorialBoard({ boardState, candidates, currentStep }: TutorialB
       className={cn(
         "grid grid-cols-9",
         "border-2 border-foreground/40 rounded-lg overflow-hidden",
-        "max-w-sm mx-auto aspect-square",
+        "w-full max-w-sm mx-auto aspect-square",
       )}
       style={{ containerType: "inline-size" }}
     >

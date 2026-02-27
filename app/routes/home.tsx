@@ -74,10 +74,10 @@ export default function Home({ loaderData }: Route.ComponentProps) {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center">
-      <div className="flex w-full max-w-md flex-col items-center gap-8 px-6">
+    <div className="flex min-h-dvh items-center justify-center">
+      <div className="flex w-full max-w-md flex-col items-center gap-8 px-4 sm:px-6">
         <div className="flex flex-col items-center gap-2">
-          <h1 className="text-5xl font-bold tracking-tight text-primary">
+          <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-primary">
             SUPERSudoku
           </h1>
           <p className="text-lg text-muted-foreground">

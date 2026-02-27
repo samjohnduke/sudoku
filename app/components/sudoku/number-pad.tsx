@@ -27,15 +27,14 @@ export function NumberPad({
   onRedo,
 }: NumberPadProps) {
   return (
-    <div className="flex flex-col gap-3 max-w-md mx-auto w-full">
+    <div className="flex flex-col gap-2 sm:gap-3 max-w-md mx-auto w-full">
       {/* Mode toggle row */}
       <div className="flex gap-2">
         {modes.map((m) => (
           <Button
             key={m.value}
             variant={mode === m.value ? "default" : "outline"}
-            size="sm"
-            className="flex-1"
+            className="flex-1 h-10 sm:h-9 text-sm"
             onClick={() => onModeChange(m.value)}
           >
             {m.label}
@@ -43,13 +42,13 @@ export function NumberPad({
         ))}
       </div>
 
-      {/* Number grid */}
+      {/* Number grid: single row on mobile for easy thumb access */}
       <div className="grid grid-cols-5 gap-1.5">
         {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => (
           <Button
             key={n}
             variant="outline"
-            className={cn("text-lg font-semibold aspect-square h-auto")}
+            className={cn("text-lg font-semibold h-auto min-h-[44px] aspect-square")}
             onClick={() => onNumber(n)}
           >
             {n}
@@ -57,7 +56,7 @@ export function NumberPad({
         ))}
         <Button
           variant="outline"
-          className="text-sm aspect-square h-auto"
+          className="text-sm h-auto min-h-[44px] aspect-square"
           onClick={onDelete}
         >
           Delete
@@ -68,16 +67,14 @@ export function NumberPad({
       <div className="flex gap-2">
         <Button
           variant="outline"
-          size="sm"
-          className="flex-1"
+          className="flex-1 h-10 sm:h-9 text-sm"
           onClick={onUndo}
         >
           Undo
         </Button>
         <Button
           variant="outline"
-          size="sm"
-          className="flex-1"
+          className="flex-1 h-10 sm:h-9 text-sm"
           onClick={onRedo}
         >
           Redo

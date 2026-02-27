@@ -16,10 +16,10 @@ export function StepControls({
   onReset,
 }: StepControlsProps) {
   return (
-    <div className="flex items-center justify-between gap-3 mt-4">
+    <div className="flex items-center justify-between gap-2 sm:gap-3 mt-4">
       <Button
         variant="outline"
-        size="sm"
+        className="h-10 sm:h-8 px-3 text-sm"
         onClick={onReset}
         disabled={currentStep === 0}
       >
@@ -27,20 +27,20 @@ export function StepControls({
       </Button>
 
       <span className="text-sm text-muted-foreground tabular-nums">
-        Step {currentStep + 1} of {totalSteps}
+        {currentStep + 1}/{totalSteps}
       </span>
 
       <div className="flex gap-2">
         <Button
           variant="outline"
-          size="sm"
+          className="h-10 sm:h-8 px-3 text-sm"
           onClick={onPrevious}
           disabled={currentStep === 0}
         >
-          Previous
+          Prev
         </Button>
         <Button
-          size="sm"
+          className="h-10 sm:h-8 px-3 text-sm"
           onClick={onNext}
           disabled={currentStep === totalSteps - 1}
         >

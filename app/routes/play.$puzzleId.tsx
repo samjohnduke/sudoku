@@ -245,10 +245,10 @@ export default function PlayRoute() {
   const padMode = gameModeTopadMode(mode);
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col">
+    <div className="min-h-dvh bg-background text-foreground flex flex-col">
       {/* Header bar */}
-      <header className="flex items-center justify-between px-4 py-3 border-b">
-        <Link to="/" className="text-sm text-muted-foreground hover:text-foreground">
+      <header className="flex items-center justify-between px-3 sm:px-4 py-2 sm:py-3 border-b">
+        <Link to="/" className="text-sm text-muted-foreground hover:text-foreground min-h-[44px] flex items-center">
           &larr; Back
         </Link>
         <div className="flex items-center gap-3">
@@ -260,7 +260,7 @@ export default function PlayRoute() {
       </header>
 
       {/* Main content */}
-      <main className="flex-1 flex flex-col items-center justify-center gap-6 p-4">
+      <main className="flex-1 flex flex-col items-center justify-center gap-3 sm:gap-6 px-2 sm:px-4 py-2 sm:py-4">
         {/* Completion overlay */}
         {game.isComplete ? (
           <Card className="w-full max-w-md">

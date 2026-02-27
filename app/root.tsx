@@ -1,6 +1,5 @@
 import {
   isRouteErrorResponse,
-  Link,
   Links,
   Meta,
   Outlet,
@@ -11,6 +10,7 @@ import {
 
 import type { Route } from "./+types/root";
 import { createAuth } from "~/lib/auth/auth.server";
+import { Header } from "~/components/layout/header";
 import "./app.css";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
@@ -62,23 +62,10 @@ export default function App() {
   const { user } = useLoaderData<typeof loader>();
 
   return (
-    <>
-      <header className="flex items-center justify-end px-4 py-2">
-        {user ? (
-          <span className="text-sm text-muted-foreground">
-            {user.name || "Player"}
-          </span>
-        ) : (
-          <Link
-            to="/auth/signin"
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Sign in
-          </Link>
-        )}
-      </header>
+    <div className="min-h-screen pb-16 sm:pb-0">
+      <Header user={user} />
       <Outlet context={{ user }} />
-    </>
+    </div>
   );
 }
 

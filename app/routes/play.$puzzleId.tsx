@@ -1,28 +1,27 @@
-import { useState, useCallback, useEffect } from "react";
+import { and, eq } from "drizzle-orm";
+import { useCallback, useEffect, useState } from "react";
 import type { LoaderFunctionArgs } from "react-router";
-import { useLoaderData, Link } from "react-router";
-import { getDb } from "~/db";
-import { puzzles, userStats } from "~/db/schema";
-import { eq, and } from "drizzle-orm";
-import { createAuth } from "~/lib/auth/auth.server";
-import { useGame, type SavePayload } from "~/hooks/use-game";
-import type { InputMode as GameInputMode } from "~/hooks/use-game";
+import { Link, useLoaderData, useParams } from "react-router";
 import { Board } from "~/components/sudoku/board";
 import { NumberPad, type InputMode as PadInputMode } from "~/components/sudoku/number-pad";
 import type { GameSettings } from "~/components/sudoku/types";
 import { DEFAULT_SETTINGS } from "~/components/sudoku/types";
-import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import {
   Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter,
 } from "~/components/ui/card";
-import { cn } from "~/lib/utils";
+import { getDb } from "~/db";
+import { puzzles, userStats } from "~/db/schema";
+import type { InputMode as GameInputMode } from "~/hooks/use-game";
+import { useGame, type SavePayload } from "~/hooks/use-game";
+import { createAuth } from "~/lib/auth/auth.server";
 import { getHint } from "~/lib/hints";
+import { cn } from "~/lib/utils";
 import type { SolveStep, Technique } from "../../lib/sudoku/types";
 
 // ---------------------------------------------------------------------------
@@ -123,7 +122,7 @@ function formatTime(seconds: number): string {
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
-const SETTINGS_KEY = "supersudoku_settings";
+const SETTINGS_KEY = "super_sudoku_settings";
 
 function loadSettings(): GameSettings {
   if (typeof window === "undefined") return DEFAULT_SETTINGS;
@@ -136,7 +135,7 @@ function loadSettings(): GameSettings {
   return DEFAULT_SETTINGS;
 }
 
-const LOCAL_SAVE_PREFIX = "supersudoku_progress_";
+const LOCAL_SAVE_PREFIX = "super_sudoku_progress_";
 
 /** Map NumberPad modes to useGame modes */
 function padModeToGameMode(m: PadInputMode): GameInputMode {
@@ -152,12 +151,22 @@ function gameModeTopadMode(m: GameInputMode): PadInputMode {
 }
 
 // ---------------------------------------------------------------------------
-// Component
+// GameView — reusable game UI (used by both PlayRoute and ErrorBoundary)
 // ---------------------------------------------------------------------------
 
-export default function PlayRoute() {
-  const { puzzle, progress } = useLoaderData<typeof loader>();
+interface GameViewProps {
+  puzzle: {
+    id: string;
+    puzzle: string;
+    solution: string;
+    difficultyScore: number;
+    difficultyLabel: string;
+    techniquesRequired: string;
+  };
+  progress: { boardState: string; notes: string; timeSeconds: number } | null;
+}
 
+function GameView({ puzzle, progress }: GameViewProps) {
   const [settings] = useState<GameSettings>(loadSettings);
 
   const initial = parsePuzzleString(puzzle.puzzle);
@@ -348,4 +357,69 @@ export default function PlayRoute() {
       </main>
     </div>
   );
+}
+
+// ---------------------------------------------------------------------------
+// Default export — loads puzzle data from the loader
+// ---------------------------------------------------------------------------
+
+export default function PlayRoute() {
+  const { puzzle, progress } = useLoaderData<typeof loader>();
+  return <GameView puzzle={puzzle} progress={progress} />;
+}
+
+// ---------------------------------------------------------------------------
+// ErrorBoundary — offline fallback, loads puzzle from SW cache
+// ---------------------------------------------------------------------------
+
+export function ErrorBoundary() {
+  const { puzzleId } = useParams();
+  const [puzzle, setPuzzle] = useState<GameViewProps["puzzle"] | null>(null);
+  const [loadError, setLoadError] = useState(false);
+
+  useEffect(() => {
+    async function loadFromCache() {
+      try {
+        const cache = await caches.open("data-v1");
+        const response = await cache.match("/api/puzzles/all");
+        if (!response) {
+          setLoadError(true);
+          return;
+        }
+        const allPuzzles = await response.json();
+        const found = allPuzzles.find((p: { id: string }) => p.id === puzzleId);
+        if (found) setPuzzle(found);
+        else setLoadError(true);
+      } catch {
+        setLoadError(true);
+      }
+    }
+    loadFromCache();
+  }, [puzzleId]);
+
+  if (loadError) {
+    return (
+      <div className="flex flex-1 items-center justify-center min-h-dvh">
+        <div className="text-center px-6">
+          <h1 className="text-xl font-semibold mb-2">Puzzle Unavailable</h1>
+          <p className="text-muted-foreground mb-4">
+            This puzzle isn&apos;t available offline.
+          </p>
+          <Link to="/" className="text-primary hover:underline">
+            Back to home
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (!puzzle) {
+    return (
+      <div className="flex flex-1 items-center justify-center min-h-dvh">
+        <p className="text-muted-foreground">Loading puzzle...</p>
+      </div>
+    );
+  }
+
+  return <GameView puzzle={puzzle} progress={null} />;
 }

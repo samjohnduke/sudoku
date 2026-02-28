@@ -246,26 +246,32 @@ export default function PlayRoute() {
 
   return (
     <div className="min-h-dvh bg-background text-foreground flex flex-col">
-      {/* Header bar */}
-      <header className="flex items-center justify-between px-3 sm:px-4 py-2 sm:py-3 border-b">
-        <Link to="/" className="text-sm text-muted-foreground hover:text-foreground min-h-[44px] flex items-center">
+      {/* Floating info bar */}
+      <header className="flex items-center justify-between px-4 py-3">
+        <Link
+          to="/"
+          className="text-sm text-muted-foreground hover:text-foreground transition-colors min-h-[44px] flex items-center"
+        >
           &larr; Back
         </Link>
-        <div className="flex items-center gap-3">
-          <Badge variant="secondary">{puzzle.difficultyLabel}</Badge>
-          <span className={cn("tabular-nums font-mono text-sm", game.isComplete && "text-green-600 font-semibold")}>
-            {formatTime(game.timer)}
-          </span>
-        </div>
+        <span className="text-sm text-muted-foreground">{puzzle.difficultyLabel}</span>
+        <span
+          className={cn(
+            "font-mono text-sm tabular-nums",
+            game.isComplete && "text-primary font-semibold"
+          )}
+        >
+          {formatTime(game.timer)}
+        </span>
       </header>
 
       {/* Main content */}
-      <main className="flex-1 flex flex-col items-center justify-center gap-3 sm:gap-6 px-2 sm:px-4 py-2 sm:py-4">
+      <main className="flex-1 flex flex-col items-center justify-between px-3 pb-6 sm:justify-center sm:gap-6 sm:pb-4">
         {/* Completion overlay */}
         {game.isComplete ? (
-          <Card className="w-full max-w-md">
+          <Card className="w-full max-w-md border-border/50 animate-slide-up mb-4">
             <CardHeader>
-              <CardTitle>Puzzle Complete!</CardTitle>
+              <CardTitle className="font-serif text-xl">Puzzle Complete</CardTitle>
               <CardDescription>
                 You solved a {puzzle.difficultyLabel.toLowerCase()} puzzle
               </CardDescription>
@@ -283,7 +289,7 @@ export default function PlayRoute() {
               </div>
             </CardContent>
             <CardFooter className="gap-2">
-              <Button asChild variant="outline" className="flex-1">
+              <Button asChild variant="outline" className="flex-1 rounded-xl">
                 <Link to="/">Home</Link>
               </Button>
             </CardFooter>
@@ -291,54 +297,53 @@ export default function PlayRoute() {
         ) : null}
 
         {/* Board */}
-        <Board game={game} settings={settings} onSelectCell={selectCell} hintCells={hintCells} />
+        <div className="w-full max-w-md flex-shrink-0">
+          <Board game={game} settings={settings} onSelectCell={selectCell} hintCells={hintCells} />
+        </div>
 
-        {/* Hint button + hint card */}
-        {!game.isComplete && settings.hintsEnabled ? (
-          <div className="w-full max-w-md flex flex-col gap-3">
-            {!hint ? (
-              <Button
-                variant="outline"
-                size="sm"
-                className="self-center"
-                onClick={handleHint}
-              >
-                Hint
-              </Button>
-            ) : null}
-            {hint ? (
-              <Card className="border-amber-300 dark:border-amber-600 bg-amber-50 dark:bg-amber-950/30">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base">
-                    {TECHNIQUE_DISPLAY_NAMES[hint.technique]}
-                  </CardTitle>
-                  <CardDescription className="text-sm">
-                    {hint.description}
-                  </CardDescription>
-                </CardHeader>
-                <CardFooter className="pt-0 pb-3">
-                  <Link
-                    to={`/bible/${hint.technique}`}
-                    className="text-xs text-primary hover:underline"
-                  >
-                    Learn this technique &rarr;
-                  </Link>
-                </CardFooter>
-              </Card>
-            ) : null}
-          </div>
-        ) : null}
-
-        {/* Number Pad */}
+        {/* Bottom section: hints + number pad */}
         {!game.isComplete ? (
-          <NumberPad
-            onNumber={enterNumber}
-            onDelete={deleteValue}
-            mode={padMode}
-            onModeChange={(m) => setMode(padModeToGameMode(m))}
-            onUndo={undo}
-            onRedo={redo}
-          />
+          <div className="w-full max-w-md flex flex-col gap-3 mt-3 sm:mt-0">
+            {/* Hint area */}
+            {settings.hintsEnabled ? (
+              <>
+                {!hint ? (
+                  <button
+                    onClick={handleHint}
+                    className="self-center text-sm text-muted-foreground hover:text-foreground transition-colors py-1"
+                  >
+                    Show hint
+                  </button>
+                ) : null}
+                {hint ? (
+                  <div className="px-3 py-2.5 rounded-xl border border-amber-300/50 dark:border-amber-600/30 bg-amber-50/50 dark:bg-amber-950/20 animate-fade-in">
+                    <p className="text-sm font-medium">
+                      {TECHNIQUE_DISPLAY_NAMES[hint.technique]}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {hint.description}
+                    </p>
+                    <Link
+                      to={`/bible/${hint.technique}`}
+                      className="text-xs text-primary hover:underline mt-1 inline-block"
+                    >
+                      Learn this technique
+                    </Link>
+                  </div>
+                ) : null}
+              </>
+            ) : null}
+
+            {/* Number Pad */}
+            <NumberPad
+              onNumber={enterNumber}
+              onDelete={deleteValue}
+              mode={padMode}
+              onModeChange={(m) => setMode(padModeToGameMode(m))}
+              onUndo={undo}
+              onRedo={redo}
+            />
+          </div>
         ) : null}
       </main>
     </div>

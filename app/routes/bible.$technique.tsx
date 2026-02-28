@@ -4,8 +4,7 @@ import { getTechniqueBySlug, techniques } from "~/data/bible";
 import { tutorials } from "~/data/tutorials";
 import { TutorialBoard } from "~/components/bible/tutorial-board";
 import { StepControls } from "~/components/bible/step-controls";
-import { Badge } from "~/components/ui/badge";
-import { Card, CardContent } from "~/components/ui/card";
+import { cn } from "~/lib/utils";
 
 export function meta({ params }: { params: { technique: string } }) {
   const tech = getTechniqueBySlug(params.technique);
@@ -22,46 +21,43 @@ export default function TechniquePage() {
   const [currentStep, setCurrentStep] = useState(0);
 
   if (!tech || !tutorial) {
-    return <div className="max-w-3xl mx-auto px-4 py-8">Technique not found.</div>;
+    return <div className="max-w-xl mx-auto px-5 py-8">Technique not found.</div>;
   }
 
-  // Find previous and next techniques for navigation
   const techIndex = techniques.findIndex(t => t.slug === slug);
   const prevTech = techIndex > 0 ? techniques[techIndex - 1] : null;
   const nextTech = techIndex < techniques.length - 1 ? techniques[techIndex + 1] : null;
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8 pb-20 sm:pb-0">
-      {/* Breadcrumb */}
-      <nav className="text-sm text-muted-foreground mb-4">
-        <Link to="/bible" className="hover:text-foreground">Techniques</Link>
-        <span className="mx-2">/</span>
-        <span>{tech.name}</span>
-      </nav>
+    <div className="max-w-xl mx-auto px-5 py-8 pb-20 sm:pb-8">
+      {/* Back link */}
+      <Link
+        to="/bible"
+        className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+      >
+        &larr; All techniques
+      </Link>
 
       {/* Header */}
-      <h1 className="text-3xl font-bold mb-2 font-serif">{tech.name}</h1>
-      <Badge variant="outline" className="mb-6">{tech.category}</Badge>
+      <h1 className="font-serif italic text-3xl text-foreground mt-4">
+        {tech.name}
+      </h1>
+      <p className="text-xs text-muted-foreground mt-1 uppercase tracking-wider">
+        {tech.category}
+      </p>
 
-      {/* Explanation sections */}
-      <section className="space-y-4 mb-8">
-        <div>
-          <h2 className="text-lg font-semibold mb-1 font-serif">What is it?</h2>
-          <p className="text-muted-foreground">{tutorial.explanation.what}</p>
-        </div>
-        <div>
-          <h2 className="text-lg font-semibold mb-1 font-serif">When to use it</h2>
-          <p className="text-muted-foreground">{tutorial.explanation.when}</p>
-        </div>
-        <div>
-          <h2 className="text-lg font-semibold mb-1 font-serif">Why it works</h2>
-          <p className="text-muted-foreground">{tutorial.explanation.why}</p>
-        </div>
-      </section>
+      {/* Explanation — conversational flow, no sub-headings */}
+      <div className="mt-6 space-y-3 text-sm text-foreground/80 leading-relaxed">
+        <p>{tutorial.explanation.what}</p>
+        <p>{tutorial.explanation.when}</p>
+        <p>{tutorial.explanation.why}</p>
+      </div>
 
       {/* Interactive Tutorial */}
-      <section className="mb-8">
-        <h2 className="text-xl font-semibold mb-4 font-serif">Interactive Demo</h2>
+      <section className="mt-10">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-4">
+          Try it
+        </h2>
 
         <TutorialBoard
           boardState={tutorial.boardState}
@@ -70,11 +66,9 @@ export default function TechniquePage() {
         />
 
         {/* Step description */}
-        <Card className="mt-4">
-          <CardContent className="py-3">
-            <p>{tutorial.steps[currentStep].description}</p>
-          </CardContent>
-        </Card>
+        <p className="text-sm text-foreground/80 leading-relaxed mt-4">
+          {tutorial.steps[currentStep].description}
+        </p>
 
         <StepControls
           currentStep={currentStep}
@@ -85,15 +79,21 @@ export default function TechniquePage() {
         />
       </section>
 
-      {/* Navigation between techniques */}
-      <nav className="flex justify-between pt-4 border-t gap-4">
+      {/* Prev / Next navigation */}
+      <nav className="flex justify-between mt-10 pt-6 border-t border-border/50 gap-4">
         {prevTech ? (
-          <Link to={`/bible/${prevTech.slug}`} className="text-sm text-primary hover:underline min-h-[44px] flex items-center">
+          <Link
+            to={`/bible/${prevTech.slug}`}
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors min-h-[44px] flex items-center"
+          >
             &larr; {prevTech.name}
           </Link>
         ) : <span />}
         {nextTech ? (
-          <Link to={`/bible/${nextTech.slug}`} className="text-sm text-primary hover:underline min-h-[44px] flex items-center">
+          <Link
+            to={`/bible/${nextTech.slug}`}
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors min-h-[44px] flex items-center"
+          >
             {nextTech.name} &rarr;
           </Link>
         ) : <span />}

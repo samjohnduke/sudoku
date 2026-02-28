@@ -62,7 +62,7 @@ export default function App() {
   const { user } = useLoaderData<typeof loader>();
 
   return (
-    <div className="min-h-screen pb-16 sm:pb-0">
+    <div className="min-h-screen">
       <Header user={user} />
       <Outlet context={{ user }} />
     </div>

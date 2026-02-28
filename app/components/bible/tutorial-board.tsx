@@ -53,11 +53,11 @@ function TutorialCell({
       aria-label={`Row ${row + 1}, Column ${col + 1}${displayValue > 0 ? `, value ${displayValue}` : ", empty"}`}
       className={cn(
         "aspect-square flex items-center justify-center relative",
-        "border-r border-b border-foreground/15",
+        "border-r border-b border-foreground/[0.12]",
         "transition-colors duration-300",
         // Box borders
-        col % 3 === 0 && col > 0 && "border-l-2 border-l-foreground/40",
-        row % 3 === 0 && row > 0 && "border-t-2 border-t-foreground/40",
+        col % 3 === 0 && col > 0 && "border-l-2 border-l-foreground/50",
+        row % 3 === 0 && row > 0 && "border-t-2 border-t-foreground/50",
         // Background states
         isHighlighted && "bg-emerald-100 dark:bg-emerald-900/40",
         isEliminate && "bg-red-100 dark:bg-red-900/30",
@@ -69,7 +69,7 @@ function TutorialCell({
       {displayValue > 0 ? (
         <span
           className={cn(
-            "text-[clamp(0.875rem,3.5cqi,1.5rem)] leading-none font-bold",
+            "text-[clamp(0.875rem,3.5cqi,1.5rem)] leading-none font-bold font-mono",
             placement !== null && "text-emerald-700 dark:text-emerald-300",
             placement === null && value > 0 && "text-foreground",
           )}
@@ -88,7 +88,7 @@ function TutorialCell({
                 key={n}
                 className={cn(
                   NOTE_POSITIONS[n - 1],
-                  "flex items-center justify-center text-[clamp(0.35rem,1.3cqi,0.55rem)] leading-none",
+                  "flex items-center justify-center text-[clamp(0.35rem,1.3cqi,0.55rem)] leading-none font-mono",
                   isCandidate && !isHighlightedCandidate && !isEliminatedCandidate && "text-muted-foreground",
                   isHighlightedCandidate && "text-emerald-600 dark:text-emerald-400 font-bold",
                   isEliminatedCandidate && "text-red-500 dark:text-red-400 line-through font-bold",
@@ -131,7 +131,7 @@ export function TutorialBoard({ boardState, candidates, currentStep }: TutorialB
       aria-label="Tutorial sudoku board"
       className={cn(
         "grid grid-cols-9",
-        "border-2 border-foreground/40 rounded-lg overflow-hidden",
+        "border-[2.5px] border-foreground/50 rounded-lg overflow-hidden",
         "w-full max-w-sm mx-auto aspect-square",
       )}
       style={{ containerType: "inline-size" }}

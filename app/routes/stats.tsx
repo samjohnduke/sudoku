@@ -50,11 +50,11 @@ function formatTime(seconds: number): string {
 const DIFFICULTY_ORDER = ["Beginner", "Easy", "Medium", "Hard", "Expert"];
 
 const DIFFICULTY_COLORS: Record<string, string> = {
-  Beginner: "#4ade80",
-  Easy: "#60a5fa",
-  Medium: "#fbbf24",
-  Hard: "#f97316",
-  Expert: "#ef4444",
+  Beginner: "#6b9080",
+  Easy: "#5b7fa5",
+  Medium: "#8a7a5e",
+  Hard: "#b07050",
+  Expert: "#c25555",
 };
 
 // ── Loader ──
@@ -252,7 +252,7 @@ function TimeTrendChart({ games }: { games: CompletedGame[] }) {
       <polyline
         points={points.join(" ")}
         fill="none"
-        stroke="#d97706"
+        stroke="var(--color-primary)"
         strokeWidth={2}
         strokeLinejoin="round"
         strokeLinecap="round"
@@ -267,7 +267,7 @@ function TimeTrendChart({ games }: { games: CompletedGame[] }) {
             cx={x}
             cy={y}
             r={3}
-            fill="#d97706"
+            fill="var(--color-primary)"
           />
         );
       })}
@@ -310,7 +310,7 @@ function DifficultyChart({
       {entries.map((entry, i) => {
         const y = i * (barHeight + gap);
         const barW = (entry.count / maxCount) * barMaxWidth;
-        const color = DIFFICULTY_COLORS[entry.label] || "#d97706";
+        const color = DIFFICULTY_COLORS[entry.label] || "var(--color-primary)";
 
         return (
           <g key={entry.label}>
@@ -401,10 +401,10 @@ export default function StatsPage({ loaderData }: Route.ComponentProps) {
   }
 
   return (
-    <div className="flex min-h-screen justify-center">
+    <div className="flex min-h-screen justify-center pb-20 sm:pb-0">
       <div className="w-full max-w-2xl px-6 py-8 space-y-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Your Stats</h1>
+          <h1 className="text-3xl font-bold tracking-tight font-serif">Your Stats</h1>
           <p className="text-muted-foreground mt-1">
             Track your puzzle-solving progress.
           </p>
@@ -414,7 +414,7 @@ export default function StatsPage({ loaderData }: Route.ComponentProps) {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
+              <CardTitle className="text-sm font-medium text-muted-foreground font-serif">
                 Puzzles Completed
               </CardTitle>
             </CardHeader>
@@ -424,7 +424,7 @@ export default function StatsPage({ loaderData }: Route.ComponentProps) {
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
+              <CardTitle className="text-sm font-medium text-muted-foreground font-serif">
                 Average Time
               </CardTitle>
             </CardHeader>
@@ -436,7 +436,7 @@ export default function StatsPage({ loaderData }: Route.ComponentProps) {
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
+              <CardTitle className="text-sm font-medium text-muted-foreground font-serif">
                 Best Time
               </CardTitle>
             </CardHeader>
@@ -473,7 +473,7 @@ export default function StatsPage({ loaderData }: Route.ComponentProps) {
         {/* B. Time Trend Chart */}
         <Card>
           <CardHeader>
-            <CardTitle>Time Trend</CardTitle>
+            <CardTitle className="font-serif">Time Trend</CardTitle>
           </CardHeader>
           <CardContent>
             <TimeTrendChart games={stats.recentGames} />
@@ -483,7 +483,7 @@ export default function StatsPage({ loaderData }: Route.ComponentProps) {
         {/* C. Difficulty Distribution */}
         <Card>
           <CardHeader>
-            <CardTitle>Difficulty Distribution</CardTitle>
+            <CardTitle className="font-serif">Difficulty Distribution</CardTitle>
           </CardHeader>
           <CardContent>
             <DifficultyChart distribution={stats.difficultyDistribution} />
@@ -493,7 +493,7 @@ export default function StatsPage({ loaderData }: Route.ComponentProps) {
         {/* D. Best Times Table */}
         <Card>
           <CardHeader>
-            <CardTitle>Best Times by Difficulty</CardTitle>
+            <CardTitle className="font-serif">Best Times by Difficulty</CardTitle>
           </CardHeader>
           <CardContent>
             {Object.keys(stats.bestTimes).length > 0 ? (
@@ -552,10 +552,10 @@ function AnonymousStatsView() {
   const localStats = useLocalStats();
 
   return (
-    <div className="flex min-h-screen justify-center">
+    <div className="flex min-h-screen justify-center pb-20 sm:pb-0">
       <div className="w-full max-w-2xl px-6 py-8 space-y-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Your Stats</h1>
+          <h1 className="text-3xl font-bold tracking-tight font-serif">Your Stats</h1>
           <p className="text-muted-foreground mt-1">
             Track your puzzle-solving progress.
           </p>

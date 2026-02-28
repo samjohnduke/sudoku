@@ -1,5 +1,5 @@
-import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
+import { Delete, Undo2, Redo2 } from "lucide-react";
 
 export type InputMode = "value" | "corner" | "center";
 
@@ -27,58 +27,78 @@ export function NumberPad({
   onRedo,
 }: NumberPadProps) {
   return (
-    <div className="flex flex-col gap-2 sm:gap-3 max-w-md mx-auto w-full">
-      {/* Mode toggle row */}
-      <div className="flex gap-2">
+    <div className="flex flex-col gap-3 max-w-md mx-auto w-full px-1">
+      {/* Segmented mode toggle */}
+      <div className="flex bg-secondary rounded-xl p-1 gap-0.5">
         {modes.map((m) => (
-          <Button
+          <button
             key={m.value}
-            variant={mode === m.value ? "default" : "outline"}
-            className="flex-1 h-10 sm:h-9 text-sm"
+            className={cn(
+              "flex-1 py-2 text-sm font-medium rounded-lg transition-all duration-200",
+              mode === m.value
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground",
+            )}
             onClick={() => onModeChange(m.value)}
           >
             {m.label}
-          </Button>
+          </button>
         ))}
       </div>
 
-      {/* Number grid: single row on mobile for easy thumb access */}
-      <div className="grid grid-cols-5 gap-1.5">
+      {/* Number grid: 4 columns */}
+      <div className="grid grid-cols-4 gap-1.5">
         {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => (
-          <Button
+          <button
             key={n}
-            variant="outline"
-            className={cn("text-lg font-semibold h-auto min-h-[44px] aspect-square")}
+            className={cn(
+              "font-mono text-lg font-medium",
+              "h-12 rounded-xl",
+              "bg-secondary/60 hover:bg-secondary active:bg-secondary/80",
+              "transition-colors duration-100",
+              "flex items-center justify-center",
+            )}
             onClick={() => onNumber(n)}
           >
             {n}
-          </Button>
+          </button>
         ))}
-        <Button
-          variant="outline"
-          className="text-sm h-auto min-h-[44px] aspect-square"
+        <button
+          className={cn(
+            "h-12 rounded-xl",
+            "bg-secondary/60 hover:bg-secondary active:bg-secondary/80",
+            "transition-colors duration-100",
+            "flex items-center justify-center text-muted-foreground",
+          )}
           onClick={onDelete}
+          aria-label="Delete"
         >
-          Delete
-        </Button>
-      </div>
-
-      {/* Undo / Redo */}
-      <div className="flex gap-2">
-        <Button
-          variant="outline"
-          className="flex-1 h-10 sm:h-9 text-sm"
+          <Delete className="w-5 h-5" />
+        </button>
+        <button
+          className={cn(
+            "h-12 rounded-xl",
+            "bg-secondary/60 hover:bg-secondary active:bg-secondary/80",
+            "transition-colors duration-100",
+            "flex items-center justify-center text-muted-foreground",
+          )}
           onClick={onUndo}
+          aria-label="Undo"
         >
-          Undo
-        </Button>
-        <Button
-          variant="outline"
-          className="flex-1 h-10 sm:h-9 text-sm"
+          <Undo2 className="w-5 h-5" />
+        </button>
+        <button
+          className={cn(
+            "h-12 rounded-xl",
+            "bg-secondary/60 hover:bg-secondary active:bg-secondary/80",
+            "transition-colors duration-100",
+            "flex items-center justify-center text-muted-foreground",
+          )}
           onClick={onRedo}
+          aria-label="Redo"
         >
-          Redo
-        </Button>
+          <Redo2 className="w-5 h-5" />
+        </button>
       </div>
     </div>
   );

@@ -95,9 +95,12 @@ export function generateSolvedGrid(): Grid {
 /**
  * Generate a puzzle by starting from a solved grid, then removing clues
  * one at a time in random order. After each removal, verify the puzzle
- * still has exactly one solution. Stop when no more clues can be removed.
+ * still has exactly one solution.
+ *
+ * @param maxRemovals - Stop after removing this many clues (default: unlimited).
+ *   Use lower values (e.g. 40-45) to produce easier puzzles with more clues.
  */
-export function generatePuzzle(): { puzzle: Grid; solution: Grid } {
+export function generatePuzzle(maxRemovals?: number): { puzzle: Grid; solution: Grid } {
   const solution = generateSolvedGrid();
   const puzzle = cloneGrid(solution);
 
@@ -110,13 +113,18 @@ export function generatePuzzle(): { puzzle: Grid; solution: Grid } {
   }
   shuffle(positions);
 
+  let removed = 0;
   for (const [r, c] of positions) {
+    if (maxRemovals !== undefined && removed >= maxRemovals) break;
+
     const backup = puzzle[r][c];
     puzzle[r][c] = 0;
 
     if (!hasUniqueSolution(puzzle)) {
       // Removing this clue breaks uniqueness — put it back
       puzzle[r][c] = backup;
+    } else {
+      removed++;
     }
   }
 

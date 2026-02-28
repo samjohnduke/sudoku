@@ -10,6 +10,7 @@ const { values } = parseArgs({
     count: { type: "string", default: "10" },
     min: { type: "string", default: "0" },
     max: { type: "string", default: "100" },
+    "max-removals": { type: "string" },
     output: { type: "string", default: "puzzles.json" },
   },
 });
@@ -17,6 +18,7 @@ const { values } = parseArgs({
 const target = parseInt(values.count!, 10);
 const minDifficulty = parseInt(values.min!, 10);
 const maxDifficulty = parseInt(values.max!, 10);
+const maxRemovals = values["max-removals"] ? parseInt(values["max-removals"]!, 10) : undefined;
 const outputPath = values.output!;
 
 interface PuzzleRecord {
@@ -35,7 +37,7 @@ let attempts = 0;
 
 while (puzzles.length < target) {
   attempts++;
-  const { puzzle, solution } = generatePuzzle();
+  const { puzzle, solution } = generatePuzzle(maxRemovals);
   const grade = gradePuzzle(puzzle);
 
   if (!grade.solved) {

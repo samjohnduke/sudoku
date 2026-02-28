@@ -1,26 +1,26 @@
-import { useState, useCallback, useEffect } from "react";
-import { Link, useOutletContext } from "react-router";
-import type { Route } from "./+types/settings";
-import { getDb } from "~/db";
-import { userSettings } from "~/db/schema";
 import { eq } from "drizzle-orm";
-import { createAuth } from "~/lib/auth/auth.server";
+import { useCallback, useEffect, useState } from "react";
+import { Link, useOutletContext } from "react-router";
 import type { GameSettings } from "~/components/sudoku/types";
 import { DEFAULT_SETTINGS } from "~/components/sudoku/types";
-import { Switch } from "~/components/ui/switch";
-import { Label } from "~/components/ui/label";
 import { Button } from "~/components/ui/button";
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
-  CardDescription,
 } from "~/components/ui/card";
+import { Label } from "~/components/ui/label";
+import { Switch } from "~/components/ui/switch";
+import { getDb } from "~/db";
+import { userSettings } from "~/db/schema";
 import { authClient } from "~/lib/auth/auth-client";
+import { createAuth } from "~/lib/auth/auth.server";
+import type { Route } from "./+types/settings";
 
-const SETTINGS_KEY = "supersudoku_settings";
-const THEME_KEY = "supersudoku_theme";
+const SETTINGS_KEY = "super_sudoku_settings";
+const THEME_KEY = "super_sudoku_theme";
 
 type Theme = "light" | "dark";
 
@@ -53,7 +53,7 @@ function applyTheme(theme: Theme) {
 }
 
 export function meta() {
-  return [{ title: "Settings — SUPERSudoku" }];
+  return [{ title: "Settings — Super Sudoku" }];
 }
 
 export async function loader({ request, context }: Route.LoaderArgs) {
@@ -182,7 +182,7 @@ export default function SettingsPage({ loaderData }: Route.ComponentProps) {
         <div>
           <h1 className="text-3xl font-bold tracking-tight font-serif">Settings</h1>
           <p className="text-muted-foreground mt-1">
-            Customize your SUPERSudoku experience.
+            Customize your Super Sudoku experience.
           </p>
         </div>
 
@@ -268,10 +268,9 @@ export default function SettingsPage({ loaderData }: Route.ComponentProps) {
                     variant="outline"
                     size="sm"
                     onClick={async () => {
-                      try {
-                        await authClient.passkey.addPasskey();
-                      } catch {
-                        // User cancelled or error
+                      const result = await authClient.passkey.addPasskey();
+                      if (result.error) {
+                        alert(result.error.message || "Failed to add passkey.");
                       }
                     }}
                   >

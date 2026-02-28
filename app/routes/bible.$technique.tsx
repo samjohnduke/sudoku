@@ -1,15 +1,14 @@
-import { useParams, Link } from "react-router";
 import { useState } from "react";
+import { Link, useParams } from "react-router";
+import { StepControls } from "~/components/bible/step-controls";
+import { TutorialBoard } from "~/components/bible/tutorial-board";
 import { getTechniqueBySlug, techniques } from "~/data/bible";
 import { tutorials } from "~/data/tutorials";
-import { TutorialBoard } from "~/components/bible/tutorial-board";
-import { StepControls } from "~/components/bible/step-controls";
-import { cn } from "~/lib/utils";
 
 export function meta({ params }: { params: { technique: string } }) {
   const tech = getTechniqueBySlug(params.technique);
   return [
-    { title: `${tech?.name ?? "Technique"} — SUPERSudoku Learn` },
+    { title: `${tech?.name ?? "Technique"} — Super Sudoku Learn` },
     { name: "description", content: tech?.shortDescription ?? "" },
   ];
 }

@@ -1,5 +1,5 @@
-const SETTINGS_KEY = "supersudoku_settings";
-const LOCAL_SAVE_PREFIX = "supersudoku_progress_";
+const SETTINGS_KEY = "super_sudoku_settings";
+const LOCAL_SAVE_PREFIX = "super_sudoku_progress_";
 
 /**
  * Migrate localStorage data to the server after a successful sign-in.

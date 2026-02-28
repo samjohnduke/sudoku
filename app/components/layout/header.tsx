@@ -1,7 +1,7 @@
+import { BarChart2, BookOpen, Settings } from "lucide-react";
 import { Link, useLocation } from "react-router";
-import { cn } from "~/lib/utils";
-import { BookOpen, BarChart2, Settings } from "lucide-react";
 import { Logo } from "~/components/logo";
+import { cn } from "~/lib/utils";
 
 interface HeaderProps {
   user: { id: string; name: string | null } | null;
@@ -35,7 +35,7 @@ export function Header({ user }: HeaderProps) {
           <Link to="/" className="flex items-center gap-2">
             <Logo size={22} className="text-primary" />
             <span className="font-serif italic text-lg text-foreground">
-              supersudoku
+              super sudoku
             </span>
           </Link>
 

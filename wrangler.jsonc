@@ -1,24 +1,27 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "supersudoku",
-  "compatibility_date": "2025-04-04",
-  "compatibility_flags": ["nodejs_compat"],
-  "main": "./workers/app.ts",
-  "routes": [
-    {
-      "pattern": "sudoku.samduke.dev",
-      "custom_domain": true
-    }
-  ],
-  "vars": {
-    "BETTER_AUTH_SECRET": "",
-    "BETTER_AUTH_URL": ""
-  },
-  "d1_databases": [
-    {
-      "binding": "DB",
-      "database_name": "supersudoku-db",
-      "database_id": "841e189d-56de-48ae-ab6a-5cfb3b604bb7"
-    }
-  ]
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "supersudoku",
+	"compatibility_date": "2025-04-04",
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
+	"main": "./workers/app.ts",
+	"routes": [
+		{
+			"pattern": "sudoku.samduke.dev",
+			"custom_domain": true
+		}
+	],
+	"vars": {
+
+	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "supersudoku-db",
+			"database_id": "841e189d-56de-48ae-ab6a-5cfb3b604bb7"
+		}
+	],
+	"workers_dev": true,
+	"preview_urls": true
 }

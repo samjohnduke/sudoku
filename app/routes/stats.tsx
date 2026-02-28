@@ -1,17 +1,17 @@
+import { and, desc, eq, isNotNull, isNull } from "drizzle-orm";
 import { useEffect, useState } from "react";
 import { Link, useOutletContext } from "react-router";
-import type { Route } from "./+types/stats";
-import { getDb } from "~/db";
-import { userStats, puzzles } from "~/db/schema";
-import { eq, and, isNotNull, desc, isNull } from "drizzle-orm";
-import { createAuth } from "~/lib/auth/auth.server";
+import { Button } from "~/components/ui/button";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from "~/components/ui/card";
-import { Button } from "~/components/ui/button";
+import { getDb } from "~/db";
+import { puzzles, userStats } from "~/db/schema";
+import { createAuth } from "~/lib/auth/auth.server";
+import type { Route } from "./+types/stats";
 
 // ── Types ──
 
@@ -60,7 +60,7 @@ const DIFFICULTY_COLORS: Record<string, string> = {
 // ── Loader ──
 
 export function meta() {
-  return [{ title: "Stats — SUPERSudoku" }];
+  return [{ title: "Stats — Super Sudoku" }];
 }
 
 export async function loader({ request, context }: Route.LoaderArgs) {
@@ -364,7 +364,7 @@ function useLocalStats(): LocalStats {
 
   useEffect(() => {
     try {
-      const raw = localStorage.getItem("supersudoku_game_history");
+      const raw = localStorage.getItem("super_sudoku_game_history");
       if (raw) {
         const history = JSON.parse(raw) as Array<{
           completed?: boolean;

@@ -1,9 +1,9 @@
-import { getTechniquesByCategory } from "~/data/bible";
 import { Link } from "react-router";
+import { getTechniquesByCategory } from "~/data/bible";
 
 export function meta() {
   return [
-    { title: "Learn — SUPERSudoku" },
+    { title: "Learn — Super Sudoku" },
     { name: "description", content: "Learn every sudoku solving technique from beginner to expert." },
   ];
 }

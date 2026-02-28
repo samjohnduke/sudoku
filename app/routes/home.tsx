@@ -8,6 +8,7 @@ import { createAuth } from "~/lib/auth/auth.server";
 import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
 import { Play } from "lucide-react";
+import { Logo } from "~/components/logo";
 
 const DIFFICULTIES = ["Beginner", "Easy", "Medium", "Hard", "Expert"] as const;
 
@@ -116,11 +117,14 @@ export default function Home({ loaderData }: Route.ComponentProps) {
     <div className="flex min-h-dvh items-center justify-center pb-20 sm:pb-0">
       <div className="flex w-full max-w-sm flex-col items-center gap-10 px-6">
         {/* Logo */}
-        <div className="flex flex-col items-center animate-fade-in">
-          <h1 className="font-serif italic text-4xl sm:text-5xl text-foreground leading-tight text-center">
-            supersudoku
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">Pick your challenge</p>
+        <div className="flex flex-col items-center gap-4 animate-fade-in">
+          <Logo size={56} className="text-primary" />
+          <div className="text-center">
+            <h1 className="font-serif italic text-3xl sm:text-4xl text-foreground leading-tight">
+              supersudoku
+            </h1>
+            <p className="text-xs text-muted-foreground mt-1.5 tracking-wide uppercase">Pick your challenge</p>
+          </div>
         </div>
 
         {/* Resume card */}

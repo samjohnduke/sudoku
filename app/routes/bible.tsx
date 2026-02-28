@@ -5,15 +5,15 @@ import { Badge } from "~/components/ui/badge";
 
 export function meta() {
   return [
-    { title: "Solving Bible — SUPERSudoku" },
+    { title: "Solving Techniques — SUPERSudoku" },
     { name: "description", content: "Learn every sudoku solving technique from beginner to expert." },
   ];
 }
 
 export default function Bible() {
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-2">The Solving Bible</h1>
+    <div className="max-w-3xl mx-auto px-4 py-8 pb-20 sm:pb-0">
+      <h1 className="text-3xl font-bold mb-2 font-serif">Solving Techniques</h1>
       <p className="text-muted-foreground mb-8">
         Master every technique from naked singles to unique rectangles.
       </p>
@@ -23,7 +23,7 @@ export default function Bible() {
         return (
           <section key={category} className="mb-8">
             <h2 className="text-xl font-semibold mb-3 flex items-center gap-2">
-              <Badge variant="outline">{category}</Badge>
+              <Badge variant="secondary">{category}</Badge>
             </h2>
             <div className="grid gap-3">
               {techs.map(tech => (

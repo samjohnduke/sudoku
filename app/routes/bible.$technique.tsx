@@ -10,7 +10,7 @@ import { Card, CardContent } from "~/components/ui/card";
 export function meta({ params }: { params: { technique: string } }) {
   const tech = getTechniqueBySlug(params.technique);
   return [
-    { title: `${tech?.name ?? "Technique"} — SUPERSudoku Bible` },
+    { title: `${tech?.name ?? "Technique"} — SUPERSudoku Learn` },
     { name: "description", content: tech?.shortDescription ?? "" },
   ];
 }
@@ -31,37 +31,37 @@ export default function TechniquePage() {
   const nextTech = techIndex < techniques.length - 1 ? techniques[techIndex + 1] : null;
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8">
+    <div className="max-w-3xl mx-auto px-4 py-8 pb-20 sm:pb-0">
       {/* Breadcrumb */}
       <nav className="text-sm text-muted-foreground mb-4">
-        <Link to="/bible" className="hover:text-foreground">Bible</Link>
+        <Link to="/bible" className="hover:text-foreground">Techniques</Link>
         <span className="mx-2">/</span>
         <span>{tech.name}</span>
       </nav>
 
       {/* Header */}
-      <h1 className="text-3xl font-bold mb-2">{tech.name}</h1>
+      <h1 className="text-3xl font-bold mb-2 font-serif">{tech.name}</h1>
       <Badge variant="outline" className="mb-6">{tech.category}</Badge>
 
       {/* Explanation sections */}
       <section className="space-y-4 mb-8">
         <div>
-          <h2 className="text-lg font-semibold mb-1">What is it?</h2>
+          <h2 className="text-lg font-semibold mb-1 font-serif">What is it?</h2>
           <p className="text-muted-foreground">{tutorial.explanation.what}</p>
         </div>
         <div>
-          <h2 className="text-lg font-semibold mb-1">When to use it</h2>
+          <h2 className="text-lg font-semibold mb-1 font-serif">When to use it</h2>
           <p className="text-muted-foreground">{tutorial.explanation.when}</p>
         </div>
         <div>
-          <h2 className="text-lg font-semibold mb-1">Why it works</h2>
+          <h2 className="text-lg font-semibold mb-1 font-serif">Why it works</h2>
           <p className="text-muted-foreground">{tutorial.explanation.why}</p>
         </div>
       </section>
 
       {/* Interactive Tutorial */}
       <section className="mb-8">
-        <h2 className="text-xl font-semibold mb-4">Interactive Demo</h2>
+        <h2 className="text-xl font-semibold mb-4 font-serif">Interactive Demo</h2>
 
         <TutorialBoard
           boardState={tutorial.boardState}

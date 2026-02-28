@@ -40,8 +40,9 @@ export function Board({ game, settings, onSelectCell, hintCells }: BoardProps) {
       aria-label="Sudoku board"
       className={cn(
         "grid grid-cols-9",
-        "border-2 border-foreground/40 rounded-lg overflow-hidden",
+        "border-[2.5px] border-foreground/50 rounded-lg overflow-hidden",
         "w-full max-w-md mx-auto aspect-square",
+        "shadow-sm",
       )}
       style={{ containerType: "inline-size" }}
     >
@@ -77,6 +78,7 @@ export function Board({ game, settings, onSelectCell, hintCells }: BoardProps) {
             isSameRow={isSameRow}
             isSameCol={isSameCol}
             isSameBox={isSameBox}
+            isComplete={game.isComplete}
             notes={game.notes.get(index) ?? EMPTY_SET}
             centerNotes={game.centerNotes.get(index) ?? EMPTY_SET}
             onSelect={onSelectCell}

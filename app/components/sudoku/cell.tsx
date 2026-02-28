@@ -11,21 +11,22 @@ interface CellProps {
   isSameRow: boolean;
   isSameCol: boolean;
   isSameBox: boolean;
+  isComplete: boolean;
   notes: Set<number>;
   centerNotes: Set<number>;
   onSelect: (index: number) => void;
 }
 
 const NOTE_POSITIONS = [
-  "col-start-1 row-start-1", // 1
-  "col-start-2 row-start-1", // 2
-  "col-start-3 row-start-1", // 3
-  "col-start-1 row-start-2", // 4
-  "col-start-2 row-start-2", // 5
-  "col-start-3 row-start-2", // 6
-  "col-start-1 row-start-3", // 7
-  "col-start-2 row-start-3", // 8
-  "col-start-3 row-start-3", // 9
+  "col-start-1 row-start-1",
+  "col-start-2 row-start-1",
+  "col-start-3 row-start-1",
+  "col-start-1 row-start-2",
+  "col-start-2 row-start-2",
+  "col-start-3 row-start-2",
+  "col-start-1 row-start-3",
+  "col-start-2 row-start-3",
+  "col-start-3 row-start-3",
 ];
 
 export function Cell({
@@ -39,6 +40,7 @@ export function Cell({
   isSameRow,
   isSameCol,
   isSameBox,
+  isComplete,
   notes,
   centerNotes,
   onSelect,
@@ -56,31 +58,39 @@ export function Cell({
       aria-label={`Row ${row + 1}, Column ${col + 1}${value > 0 ? `, value ${value}` : ", empty"}`}
       aria-selected={isSelected}
       className={cn(
-        "aspect-square flex items-center justify-center text-lg transition-colors relative",
-        "border-r border-b border-foreground/15",
-        "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset",
-        // Box borders: thicker on box boundaries
-        col % 3 === 0 && col > 0 && "border-l-2 border-l-foreground/40",
-        row % 3 === 0 && row > 0 && "border-t-2 border-t-foreground/40",
-        // Background states (ordered by priority)
+        "aspect-square flex items-center justify-center relative",
+        "transition-colors duration-150",
+        "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-inset",
+        "border-r border-b border-foreground/[0.12]",
+        col % 3 === 0 && col > 0 && "border-l-[2px] border-l-foreground/50",
+        row % 3 === 0 && row > 0 && "border-t-[2px] border-t-foreground/50",
         isSelected
-          ? "bg-primary/15"
+          ? "bg-primary/12"
           : isHint
-            ? "bg-amber-200/50 dark:bg-amber-500/30"
+            ? "bg-amber-200/40 dark:bg-amber-500/20"
             : isHighlighted
-              ? "bg-primary/10"
+              ? "bg-primary/8"
               : (isSameRow || isSameCol || isSameBox)
-                ? "bg-primary/5"
-                : "",
-        // Text states
-        isError && "text-destructive",
-        !isError && isInitial && "font-bold text-foreground",
-        !isError && !isInitial && value > 0 && "text-primary",
+                ? "bg-foreground/[0.03]"
+                : "bg-background",
+        isComplete && "animate-cell-ripple",
+        !isComplete && "active:animate-cell-tap",
       )}
+      style={isComplete ? { animationDelay: `${(row * 9 + col) * 12}ms` } : undefined}
       onClick={() => onSelect(index)}
     >
       {value > 0 ? (
-        <span className="text-[clamp(0.875rem,3.5cqi,1.5rem)] leading-none">{value}</span>
+        <span
+          className={cn(
+            "font-mono text-[clamp(0.9rem,3.8cqi,1.75rem)] leading-none",
+            isError && "text-destructive",
+            !isError && isInitial && "font-semibold text-foreground",
+            !isError && !isInitial && "text-primary font-medium",
+            !isInitial && "animate-cell-pop",
+          )}
+        >
+          {value}
+        </span>
       ) : hasCornerNotes ? (
         <div className="grid grid-cols-3 grid-rows-3 w-full h-full p-[1px]">
           {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => (
@@ -88,7 +98,7 @@ export function Cell({
               key={n}
               className={cn(
                 NOTE_POSITIONS[n - 1],
-                "flex items-center justify-center text-[clamp(0.4rem,1.5cqi,0.625rem)] leading-none text-muted-foreground",
+                "flex items-center justify-center font-mono text-[clamp(0.35rem,1.4cqi,0.6rem)] leading-none text-muted-foreground",
               )}
             >
               {notes.has(n) ? n : ""}
@@ -96,7 +106,7 @@ export function Cell({
           ))}
         </div>
       ) : hasCenterNotes ? (
-        <span className="text-[clamp(0.5rem,1.8cqi,0.7rem)] leading-none text-muted-foreground tracking-wider">
+        <span className="font-mono text-[clamp(0.45rem,1.7cqi,0.65rem)] leading-none text-muted-foreground tracking-wider">
           {Array.from(centerNotes).sort().join("")}
         </span>
       ) : null}

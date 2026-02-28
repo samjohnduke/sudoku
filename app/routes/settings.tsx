@@ -177,10 +177,10 @@ export default function SettingsPage({ loaderData }: Route.ComponentProps) {
   ];
 
   return (
-    <div className="flex min-h-screen justify-center">
+    <div className="flex min-h-screen justify-center pb-20 sm:pb-0">
       <div className="w-full max-w-lg px-6 py-8 space-y-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
+          <h1 className="text-3xl font-bold tracking-tight font-serif">Settings</h1>
           <p className="text-muted-foreground mt-1">
             Customize your SUPERSudoku experience.
           </p>
@@ -189,7 +189,7 @@ export default function SettingsPage({ loaderData }: Route.ComponentProps) {
         {/* Assist Settings */}
         <Card>
           <CardHeader>
-            <CardTitle>Assists</CardTitle>
+            <CardTitle className="font-serif">Assists</CardTitle>
             <CardDescription>
               Toggle gameplay assists on or off.
             </CardDescription>
@@ -221,7 +221,7 @@ export default function SettingsPage({ loaderData }: Route.ComponentProps) {
         {/* Appearance */}
         <Card>
           <CardHeader>
-            <CardTitle>Appearance</CardTitle>
+            <CardTitle className="font-serif">Appearance</CardTitle>
             <CardDescription>Choose your preferred theme.</CardDescription>
           </CardHeader>
           <CardContent>
@@ -231,14 +231,14 @@ export default function SettingsPage({ loaderData }: Route.ComponentProps) {
                 size="sm"
                 onClick={() => updateSetting("theme", "light")}
               >
-                Warm Light
+                Light
               </Button>
               <Button
                 variant={settings.theme === "dark" ? "default" : "outline"}
                 size="sm"
                 onClick={() => updateSetting("theme", "dark")}
               >
-                Warm Dark
+                Dark
               </Button>
             </div>
           </CardContent>
@@ -247,7 +247,7 @@ export default function SettingsPage({ loaderData }: Route.ComponentProps) {
         {/* Account */}
         <Card>
           <CardHeader>
-            <CardTitle>Account</CardTitle>
+            <CardTitle className="font-serif">Account</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {user ? (

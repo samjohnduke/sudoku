@@ -1,0 +1,14 @@
+<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" rx="96" fill="hsl(40, 30%, 97%)"/>
+  <g transform="translate(96, 96) scale(9.14)">
+    <rect x="1.5" y="1.5" width="9" height="9" rx="2" fill="hsl(220, 25%, 50%)" fill-opacity="0.9"/>
+    <rect x="12" y="1.5" width="9" height="9" rx="2" fill="none" stroke="hsl(220, 25%, 50%)" stroke-opacity="0.2" stroke-width="0.8"/>
+    <rect x="22.5" y="1.5" width="9" height="9" rx="2" fill="hsl(220, 25%, 50%)" fill-opacity="0.4"/>
+    <rect x="1.5" y="12" width="9" height="9" rx="2" fill="none" stroke="hsl(220, 25%, 50%)" stroke-opacity="0.2" stroke-width="0.8"/>
+    <rect x="12" y="12" width="9" height="9" rx="2" fill="hsl(220, 25%, 50%)" fill-opacity="0.65"/>
+    <rect x="22.5" y="12" width="9" height="9" rx="2" fill="none" stroke="hsl(220, 25%, 50%)" stroke-opacity="0.2" stroke-width="0.8"/>
+    <rect x="1.5" y="22.5" width="9" height="9" rx="2" fill="hsl(220, 25%, 50%)" fill-opacity="0.5"/>
+    <rect x="12" y="22.5" width="9" height="9" rx="2" fill="none" stroke="hsl(220, 25%, 50%)" stroke-opacity="0.2" stroke-width="0.8"/>
+    <rect x="22.5" y="22.5" width="9" height="9" rx="2" fill="hsl(220, 25%, 50%)" fill-opacity="0.2"/>
+  </g>
+</svg>

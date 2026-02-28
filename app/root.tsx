@@ -48,6 +48,19 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
+        <link rel="manifest" href="/manifest.webmanifest" />
+        <meta name="theme-color" content="#f7f4f0" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: [
+              'try{if(localStorage.getItem("super_sudoku_theme")==="dark")document.documentElement.classList.add("dark")}catch(e){}',
+              'if("serviceWorker"in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("/sw.js")})}',
+            ].join("\n"),
+          }}
+        />
       </head>
       <body>
         {children}
@@ -62,7 +75,7 @@ export default function App() {
   const { user } = useLoaderData<typeof loader>();
 
   return (
-    <div className="min-h-screen">
+    <div className="flex min-h-dvh flex-col">
       <Header user={user} />
       <Outlet context={{ user }} />
     </div>

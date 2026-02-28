@@ -90,9 +90,6 @@ export default function Home({ loaderData }: Route.ComponentProps) {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  // Check if selected difficulty has puzzles
-  const availableDifficulties = new Set(counts.map((c) => c.difficultyLabel));
-
   async function handleNewPuzzle() {
     setLoading(true);
     setError(null);
@@ -148,32 +145,30 @@ export default function Home({ loaderData }: Route.ComponentProps) {
           </button>
         ) : null}
 
-        {/* Difficulty chips */}
+        {/* Difficulty selector */}
         <div
-          className="flex flex-wrap justify-center gap-2 animate-fade-in"
+          className="w-full animate-fade-in"
           style={{ animationDelay: "100ms" }}
         >
-          {DIFFICULTIES.map((diff) => {
-            const isAvailable = availableDifficulties.has(diff);
-            const isSelected = selected === diff;
-            return (
-              <button
-                key={diff}
-                onClick={() => setSelected(diff)}
-                disabled={!isAvailable}
-                className={cn(
-                  "px-4 py-2 rounded-full text-sm font-medium transition-all",
-                  isSelected
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : isAvailable
-                      ? "bg-secondary text-secondary-foreground hover:bg-secondary/80"
-                      : "bg-muted text-muted-foreground/50 cursor-not-allowed",
-                )}
-              >
-                {diff}
-              </button>
-            );
-          })}
+          <div className="flex bg-secondary rounded-xl p-1">
+            {DIFFICULTIES.map((diff) => {
+              const isSelected = selected === diff;
+              return (
+                <button
+                  key={diff}
+                  onClick={() => setSelected(diff)}
+                  className={cn(
+                    "flex-1 py-2.5 text-xs font-medium rounded-lg transition-all duration-200",
+                    isSelected
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {diff}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* New Puzzle button */}

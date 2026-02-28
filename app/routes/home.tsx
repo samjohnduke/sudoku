@@ -94,7 +94,7 @@ async function getOfflineRandomPuzzle(min: number, max: number): Promise<string 
     const cache = await caches.open("data-v1");
     const response = await cache.match("/api/puzzles/all");
     if (!response) return null;
-    const allPuzzles: CachedPuzzle[] = await response.json();
+    const allPuzzles = (await response.json()) as CachedPuzzle[];
     const matching = allPuzzles.filter(
       (p) => p.difficultyScore >= min && p.difficultyScore <= max
     );

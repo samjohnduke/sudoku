@@ -386,8 +386,8 @@ export function ErrorBoundary() {
           setLoadError(true);
           return;
         }
-        const allPuzzles = await response.json();
-        const found = allPuzzles.find((p: { id: string }) => p.id === puzzleId);
+        const allPuzzles = (await response.json()) as GameViewProps["puzzle"][];
+        const found = allPuzzles.find((p) => p.id === puzzleId);
         if (found) setPuzzle(found);
         else setLoadError(true);
       } catch {

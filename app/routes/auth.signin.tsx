@@ -56,17 +56,17 @@ export default function SignIn() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen px-4">
+    <div className="flex items-center justify-center min-h-screen px-4 pb-20 sm:pb-0">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Sign in to SUPERSudoku</CardTitle>
+          <CardTitle className="text-2xl font-serif">Sign in</CardTitle>
           <CardDescription>
             Sync your puzzles and stats across all your devices.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <Button
-            className="w-full"
+            className="w-full rounded-xl"
             size="lg"
             onClick={handleSignIn}
             disabled={loading}
@@ -84,7 +84,7 @@ export default function SignIn() {
           </div>
 
           <Button
-            className="w-full"
+            className="w-full rounded-xl"
             variant="outline"
             size="lg"
             onClick={handleRegister}

@@ -1,14 +1,14 @@
+import { and, desc, eq, isNull, sql } from "drizzle-orm";
+import { Play } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import type { Route } from "./+types/home";
+import { Logo } from "~/components/logo";
+import { Button } from "~/components/ui/button";
 import { getDb } from "~/db";
 import { puzzles, userStats } from "~/db/schema";
-import { sql, eq, and, isNull, desc } from "drizzle-orm";
 import { createAuth } from "~/lib/auth/auth.server";
-import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
-import { Play } from "lucide-react";
-import { Logo } from "~/components/logo";
+import type { Route } from "./+types/home";
 
 const DIFFICULTIES = ["Beginner", "Easy", "Medium", "Hard", "Expert"] as const;
 
@@ -22,7 +22,7 @@ const DIFFICULTY_RANGES: Record<string, [number, number]> = {
 
 export function meta({}: Route.MetaArgs) {
   return [
-    { title: "SUPERSudoku" },
+    { title: "Super Sudoku" },
     {
       name: "description",
       content: "A sudoku app that teaches you solving techniques",
@@ -84,6 +84,28 @@ function formatTime(seconds: number): string {
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
+interface CachedPuzzle {
+  id: string;
+  difficultyScore: number;
+}
+
+async function getOfflineRandomPuzzle(min: number, max: number): Promise<string | null> {
+  try {
+    const cache = await caches.open("data-v1");
+    const response = await cache.match("/api/puzzles/all");
+    if (!response) return null;
+    const allPuzzles: CachedPuzzle[] = await response.json();
+    const matching = allPuzzles.filter(
+      (p) => p.difficultyScore >= min && p.difficultyScore <= max
+    );
+    if (matching.length === 0) return null;
+    const pick = matching[Math.floor(Math.random() * matching.length)];
+    return pick.id;
+  } catch {
+    return null;
+  }
+}
+
 export default function Home({ loaderData }: Route.ComponentProps) {
   const { counts, inProgress } = loaderData;
   const [selected, setSelected] = useState<string>("Medium");
@@ -99,6 +121,13 @@ export default function Home({ loaderData }: Route.ComponentProps) {
       const res = await fetch(`/api/puzzle/random?min=${min}&max=${max}`);
       if (!res.ok) {
         const data = await res.json();
+        if ((data as { error?: string }).error === "offline") {
+          const offlineId = await getOfflineRandomPuzzle(min, max);
+          if (offlineId) {
+            navigate(`/play/${offlineId}`);
+            return;
+          }
+        }
         setError(
           (data as { error?: string }).error || "No puzzles found for this difficulty"
         );
@@ -107,21 +136,26 @@ export default function Home({ loaderData }: Route.ComponentProps) {
       const data = (await res.json()) as { puzzleId: string };
       navigate(`/play/${data.puzzleId}`);
     } catch {
-      setError("Something went wrong. Please try again.");
+      const offlineId = await getOfflineRandomPuzzle(min, max);
+      if (offlineId) {
+        navigate(`/play/${offlineId}`);
+        return;
+      }
+      setError("You're offline and no cached puzzles are available.");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="flex min-h-dvh items-center justify-center pb-20 sm:pb-0">
+    <div className="flex flex-1 items-center justify-center pb-20 sm:pb-0">
       <div className="flex w-full max-w-sm flex-col items-center gap-10 px-6">
         {/* Logo */}
         <div className="flex flex-col items-center gap-4 animate-fade-in">
           <Logo size={56} className="text-primary" />
           <div className="text-center">
             <h1 className="font-serif italic text-3xl sm:text-4xl text-foreground leading-tight">
-              supersudoku
+              super sudoku
             </h1>
             <p className="text-xs text-muted-foreground mt-1.5 tracking-wide uppercase">Pick your challenge</p>
           </div>

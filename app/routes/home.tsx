@@ -119,13 +119,11 @@ export default function Home({ loaderData }: Route.ComponentProps) {
     <div className="flex min-h-dvh items-center justify-center pb-20 sm:pb-0">
       <div className="flex w-full max-w-sm flex-col items-center gap-10 px-6">
         {/* Logo */}
-        <div className="flex flex-col items-center gap-1 animate-fade-in">
-          <h1 className="font-serif text-5xl sm:text-6xl tracking-wide text-foreground leading-none">
-            SUPER
+        <div className="flex flex-col items-center animate-fade-in">
+          <h1 className="font-serif italic text-4xl sm:text-5xl text-foreground leading-tight text-center">
+            supersudoku
           </h1>
-          <h1 className="font-serif text-5xl sm:text-6xl tracking-[0.2em] text-foreground leading-none">
-            SUDOKU
-          </h1>
+          <p className="text-sm text-muted-foreground mt-1">Pick your challenge</p>
         </div>
 
         {/* Resume card */}

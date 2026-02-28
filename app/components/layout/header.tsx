@@ -25,8 +25,8 @@ export function Header({ user }: HeaderProps) {
       {/* Desktop header */}
       <header className="hidden sm:block border-b border-border/50 bg-background/80 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-3xl mx-auto px-6 h-14 flex items-center justify-between">
-          <Link to="/" className="font-serif text-xl text-foreground tracking-wide">
-            SUPERSudoku
+          <Link to="/" className="font-serif italic text-xl text-foreground">
+            supersudoku
           </Link>
 
           <nav className="flex items-center gap-1">

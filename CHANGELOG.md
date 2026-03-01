@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
+- Pass CLOUDFLARE_ACCOUNT_ID to deploy step by @samjohnduke ([29620ae](https://github.com/samjohnduke/sudoku/commit/29620ae9888b95739b5f526dd20b8003fa6414ad))
+
 - Include env.d.ts in tsconfig so secret types are found by @samjohnduke ([0b4760a](https://github.com/samjohnduke/sudoku/commit/0b4760aa5de92bea7ea68dc15a1c3cea2d2df30c))
 
 - Declare secret env bindings for CI typecheck by @samjohnduke ([ad6f688](https://github.com/samjohnduke/sudoku/commit/ad6f6887f7cce7e798d5d618ad7daf865f5e58fe))
@@ -38,6 +40,8 @@ All notable changes to this project will be documented in this file.
 
 
 ### Documentation
+
+- Update changelog [skip ci] by @github-actions[bot] ([a592ab3](https://github.com/samjohnduke/sudoku/commit/a592ab3ae766916c091eb482d7e959661d4d3215))
 
 - Update changelog [skip ci] by @github-actions[bot] ([e65cdd6](https://github.com/samjohnduke/sudoku/commit/e65cdd64a20e37bb5c72bebb8f565f546e4c06a1))
 

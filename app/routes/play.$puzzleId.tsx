@@ -117,7 +117,7 @@ export function getLocalProgress(puzzleId: string) {
   }
 }
 
-type Progress = { boardState: string; notes: string; timeSeconds: number; updatedAt?: string | null };
+type Progress = { boardState: string; notes: string; timeSeconds: number; updatedAt: string | null };
 type LocalProgress = { boardState: string; notes: string; timeSeconds: number; savedAt: string | null };
 
 /**

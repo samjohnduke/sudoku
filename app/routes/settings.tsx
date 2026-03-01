@@ -16,7 +16,7 @@ import { Switch } from "~/components/ui/switch";
 import { getDb } from "~/db";
 import { userSettings } from "~/db/schema";
 import { authClient } from "~/lib/auth/auth-client";
-import { createAuth } from "~/lib/auth/auth.server";
+import { getSessionUser } from "~/lib/auth/auth.server";
 import type { Route } from "./+types/settings";
 
 const SETTINGS_KEY = "super_sudoku_settings";
@@ -60,25 +60,21 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const { cloudflare } = context as { cloudflare: { env: Env } };
   let serverSettings: GameSettings | null = null;
 
-  try {
-    const auth = createAuth(cloudflare.env.DB, {
-      BETTER_AUTH_SECRET: cloudflare.env.BETTER_AUTH_SECRET,
-      BETTER_AUTH_URL: cloudflare.env.BETTER_AUTH_URL,
-    });
-    const session = await auth.api.getSession({ headers: request.headers });
-    if (session?.user) {
+  const user = await getSessionUser(request, cloudflare.env);
+  if (user) {
+    try {
       const db = getDb(cloudflare.env.DB);
       const row = await db
         .select()
         .from(userSettings)
-        .where(eq(userSettings.userId, session.user.id))
+        .where(eq(userSettings.userId, user.id))
         .get();
       if (row) {
         serverSettings = JSON.parse(row.settings);
       }
+    } catch {
+      // DB error — use local settings
     }
-  } catch {
-    // Not signed in or DB error — use local settings
   }
 
   return { serverSettings };
@@ -103,6 +99,8 @@ export default function SettingsPage({ loaderData }: Route.ComponentProps) {
     applyTheme(settings.theme || "light");
   }, [settings.theme]);
 
+  const [syncError, setSyncError] = useState<string | null>(null);
+
   const updateSetting = useCallback(
     <K extends keyof SettingsWithTheme>(key: K, value: SettingsWithTheme[K]) => {
       setSettings((prev) => {
@@ -112,12 +110,13 @@ export default function SettingsPage({ loaderData }: Route.ComponentProps) {
         // Sync to server if signed in
         if (user) {
           const { theme: _theme, ...gameSettings } = next;
+          setSyncError(null);
           fetch("/api/settings", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ settings: gameSettings }),
           }).catch(() => {
-            // Silently fail — localStorage is the fallback
+            setSyncError("Failed to sync settings to server. Changes saved locally.");
           });
         }
 
@@ -185,6 +184,12 @@ export default function SettingsPage({ loaderData }: Route.ComponentProps) {
             Customize your Super Sudoku experience.
           </p>
         </div>
+
+        {syncError ? (
+          <p className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-lg">
+            {syncError}
+          </p>
+        ) : null}
 
         {/* Assist Settings */}
         <Card>

@@ -9,25 +9,13 @@ import {
 } from "react-router";
 
 import type { Route } from "./+types/root";
-import { createAuth } from "~/lib/auth/auth.server";
+import { getSessionUser } from "~/lib/auth/auth.server";
 import { Header } from "~/components/layout/header";
 import "./app.css";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   const { cloudflare } = context as { cloudflare: { env: Env } };
-  let user: { id: string; name: string | null } | null = null;
-  try {
-    const auth = createAuth(cloudflare.env.DB, {
-      BETTER_AUTH_SECRET: cloudflare.env.BETTER_AUTH_SECRET,
-      BETTER_AUTH_URL: cloudflare.env.BETTER_AUTH_URL,
-    });
-    const session = await auth.api.getSession({ headers: request.headers });
-    if (session?.user) {
-      user = { id: session.user.id, name: session.user.name };
-    }
-  } catch {
-    /* not signed in */
-  }
+  const user = await getSessionUser(request, cloudflare.env);
   return { user };
 }
 
@@ -63,6 +51,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
         />
       </head>
       <body>
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:m-2"
+        >
+          Skip to content
+        </a>
         {children}
         <ScrollRestoration />
         <Scripts />
@@ -77,7 +71,9 @@ export default function App() {
   return (
     <div className="flex min-h-dvh flex-col">
       <Header user={user} />
-      <Outlet context={{ user }} />
+      <main id="main-content" className="flex flex-1 flex-col">
+        <Outlet context={{ user }} />
+      </main>
     </div>
   );
 }

@@ -27,12 +27,14 @@ export function NumberPad({
   onRedo,
 }: NumberPadProps) {
   return (
-    <div className="flex flex-col gap-3 max-w-md mx-auto w-full px-1">
+    <div className="flex flex-col gap-3 max-w-md mx-auto w-full px-1" role="group" aria-label="Number pad">
       {/* Segmented mode toggle */}
-      <div className="flex bg-secondary rounded-xl p-1 gap-0.5">
+      <div className="flex bg-secondary rounded-xl p-1 gap-0.5" role="radiogroup" aria-label="Input mode">
         {modes.map((m) => (
           <button
             key={m.value}
+            role="radio"
+            aria-checked={mode === m.value}
             className={cn(
               "flex-1 py-2 text-sm font-medium rounded-lg transition-all duration-200",
               mode === m.value
@@ -59,6 +61,7 @@ export function NumberPad({
               "flex items-center justify-center",
             )}
             onClick={() => onNumber(n)}
+            aria-label={`Enter ${mode === "value" ? "" : mode + " note "}${n}`}
           >
             {n}
           </button>

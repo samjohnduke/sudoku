@@ -2,23 +2,72 @@ import type { ActionFunctionArgs } from "react-router";
 import { getDb } from "~/db";
 import { userStats, userSettings } from "~/db/schema";
 import { eq, and } from "drizzle-orm";
-import { createAuth } from "~/lib/auth/auth.server";
+import { apiError, apiSuccess } from "~/lib/api";
+import { getSessionUser } from "~/lib/auth/auth.server";
+
+interface MigrateCurrentGame {
+  puzzleId: string;
+  boardState: string;
+  notesSnapshot: string;
+  timeSeconds: number;
+}
+
+interface MigrateBody {
+  currentGame?: MigrateCurrentGame;
+  settings?: string;
+}
+
+function validateMigrateBody(data: unknown): data is MigrateBody {
+  if (typeof data !== "object" || data === null) return false;
+  const obj = data as Record<string, unknown>;
+
+  if (obj.currentGame !== undefined) {
+    if (typeof obj.currentGame !== "object" || obj.currentGame === null) return false;
+    const game = obj.currentGame as Record<string, unknown>;
+    if (
+      typeof game.puzzleId !== "string" ||
+      game.puzzleId.length === 0 ||
+      typeof game.boardState !== "string" ||
+      typeof game.notesSnapshot !== "string" ||
+      typeof game.timeSeconds !== "number" ||
+      !Number.isFinite(game.timeSeconds) ||
+      game.timeSeconds < 0
+    ) {
+      return false;
+    }
+  }
+
+  if (obj.settings !== undefined && typeof obj.settings !== "string") {
+    return false;
+  }
+
+  return true;
+}
 
 export async function action({ request, context }: ActionFunctionArgs) {
   const { cloudflare } = context as { cloudflare: { env: Env } };
   const db = getDb(cloudflare.env.DB);
 
-  const auth = createAuth(cloudflare.env.DB, {
-    BETTER_AUTH_SECRET: cloudflare.env.BETTER_AUTH_SECRET,
-    BETTER_AUTH_URL: cloudflare.env.BETTER_AUTH_URL,
-  });
-  const session = await auth.api.getSession({ headers: request.headers });
-  if (!session?.user) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  const user = await getSessionUser(request, cloudflare.env);
+  if (!user) {
+    return apiError("Unauthorized", 401);
   }
 
-  const body = await request.json();
-  const userId = session.user.id;
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return apiError("Invalid JSON body", 400);
+  }
+
+  if (!validateMigrateBody(body)) {
+    return apiError(
+      "Invalid request body: expected optional currentGame ({ puzzleId, boardState, notesSnapshot, timeSeconds }) and optional settings (string)",
+      400,
+    );
+  }
+
+  const userId = user.id;
 
   // Migrate current game progress
   if (body.currentGame) {
@@ -66,5 +115,5 @@ export async function action({ request, context }: ActionFunctionArgs) {
     }
   }
 
-  return Response.json({ ok: true });
+  return apiSuccess();
 }

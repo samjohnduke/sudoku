@@ -2,22 +2,14 @@ import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 import { getDb } from "~/db";
 import { userSettings } from "~/db/schema";
 import { eq } from "drizzle-orm";
-import { createAuth } from "~/lib/auth/auth.server";
-
-async function getUser(request: Request, env: Env) {
-  const auth = createAuth(env.DB, {
-    BETTER_AUTH_SECRET: env.BETTER_AUTH_SECRET,
-    BETTER_AUTH_URL: env.BETTER_AUTH_URL,
-  });
-  const session = await auth.api.getSession({ headers: request.headers });
-  return session?.user ?? null;
-}
+import { apiError, apiSuccess } from "~/lib/api";
+import { getSessionUser } from "~/lib/auth/auth.server";
 
 export async function loader({ request, context }: LoaderFunctionArgs) {
   const { cloudflare } = context as { cloudflare: { env: Env } };
-  const user = await getUser(request, cloudflare.env);
+  const user = await getSessionUser(request, cloudflare.env);
   if (!user) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
+    return apiError("Unauthorized", 401);
   }
 
   const db = getDb(cloudflare.env.DB);
@@ -32,9 +24,9 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
 
 export async function action({ request, context }: ActionFunctionArgs) {
   const { cloudflare } = context as { cloudflare: { env: Env } };
-  const user = await getUser(request, cloudflare.env);
+  const user = await getSessionUser(request, cloudflare.env);
   if (!user) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
+    return apiError("Unauthorized", 401);
   }
 
   const body = (await request.json()) as { settings: Record<string, unknown> };
@@ -60,5 +52,5 @@ export async function action({ request, context }: ActionFunctionArgs) {
     });
   }
 
-  return Response.json({ ok: true });
+  return apiSuccess();
 }

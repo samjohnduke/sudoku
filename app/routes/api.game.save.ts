@@ -2,20 +2,53 @@ import type { ActionFunctionArgs } from "react-router";
 import { getDb } from "~/db";
 import { userStats } from "~/db/schema";
 import { eq, and } from "drizzle-orm";
-import { createAuth } from "~/lib/auth/auth.server";
+import { apiError, apiSuccess } from "~/lib/api";
+import { getSessionUser } from "~/lib/auth/auth.server";
+
+interface SaveGameBody {
+  puzzleId: string;
+  boardState: string;
+  notesSnapshot: string;
+  timeSeconds: number;
+  completed: boolean;
+}
+
+function validateSaveBody(data: unknown): data is SaveGameBody {
+  if (typeof data !== "object" || data === null) return false;
+  const obj = data as Record<string, unknown>;
+  return (
+    typeof obj.puzzleId === "string" &&
+    obj.puzzleId.length > 0 &&
+    typeof obj.boardState === "string" &&
+    typeof obj.notesSnapshot === "string" &&
+    typeof obj.timeSeconds === "number" &&
+    Number.isFinite(obj.timeSeconds) &&
+    obj.timeSeconds >= 0 &&
+    typeof obj.completed === "boolean"
+  );
+}
 
 export async function action({ request, context }: ActionFunctionArgs) {
   const { cloudflare } = context as { cloudflare: { env: Env } };
   const db = getDb(cloudflare.env.DB);
-  const body = await request.json();
 
-  const auth = createAuth(cloudflare.env.DB, {
-    BETTER_AUTH_SECRET: cloudflare.env.BETTER_AUTH_SECRET,
-    BETTER_AUTH_URL: cloudflare.env.BETTER_AUTH_URL,
-  });
-  const session = await auth.api.getSession({ headers: request.headers });
-  if (!session?.user) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  const user = await getSessionUser(request, cloudflare.env);
+  if (!user) {
+    return apiError("Unauthorized", 401);
+  }
+
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return apiError("Invalid JSON body", 400);
+  }
+
+  if (!validateSaveBody(body)) {
+    return apiError(
+      "Invalid request body: expected puzzleId (string), boardState (string), notesSnapshot (string), timeSeconds (number >= 0), completed (boolean)",
+      400,
+    );
   }
 
   const existing = await db
@@ -23,7 +56,7 @@ export async function action({ request, context }: ActionFunctionArgs) {
     .from(userStats)
     .where(
       and(
-        eq(userStats.userId, session.user.id),
+        eq(userStats.userId, user.id),
         eq(userStats.puzzleId, body.puzzleId),
       ),
     )
@@ -42,7 +75,7 @@ export async function action({ request, context }: ActionFunctionArgs) {
   } else {
     await db.insert(userStats).values({
       id: crypto.randomUUID(),
-      userId: session.user.id,
+      userId: user.id,
       puzzleId: body.puzzleId,
       startedAt: new Date().toISOString(),
       boardState: body.boardState,
@@ -52,5 +85,5 @@ export async function action({ request, context }: ActionFunctionArgs) {
     });
   }
 
-  return Response.json({ ok: true });
+  return apiSuccess();
 }

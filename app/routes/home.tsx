@@ -7,6 +7,7 @@ import { Button } from "~/components/ui/button";
 import { getDb } from "~/db";
 import { puzzles, userStats } from "~/db/schema";
 import { getSessionUser } from "~/lib/auth/auth.server";
+import { getMetrics, timedQuery } from "~/lib/metrics";
 import { cn, formatTime, DIFFICULTIES, DIFFICULTY_RANGES, DATA_CACHE_NAME } from "~/lib/utils";
 import type { Route } from "./+types/home";
 
@@ -23,37 +24,42 @@ export function meta({}: Route.MetaArgs) {
 export async function loader({ request, context }: Route.LoaderArgs) {
   const { cloudflare } = context as { cloudflare: { env: Env } };
   const db = getDb(cloudflare.env.DB);
+  const metrics = getMetrics(cloudflare.env);
 
-  const counts = await db
-    .select({
-      difficultyLabel: puzzles.difficultyLabel,
-      count: sql<number>`count(*)`.as("count"),
-    })
-    .from(puzzles)
-    .groupBy(puzzles.difficultyLabel)
-    .all();
+  const counts = await timedQuery(metrics, "select", "puzzles", () =>
+    db
+      .select({
+        difficultyLabel: puzzles.difficultyLabel,
+        count: sql<number>`count(*)`.as("count"),
+      })
+      .from(puzzles)
+      .groupBy(puzzles.difficultyLabel)
+      .all(),
+  );
 
   // Check for in-progress game if signed in
   let inProgress: { puzzleId: string; difficultyLabel: string; timeSeconds: number | null } | null = null;
   const user = await getSessionUser(request, cloudflare.env);
   if (user) {
-    const row = await db
-      .select({
-        puzzleId: userStats.puzzleId,
-        difficultyLabel: puzzles.difficultyLabel,
-        timeSeconds: userStats.timeSeconds,
-      })
-      .from(userStats)
-      .innerJoin(puzzles, eq(userStats.puzzleId, puzzles.id))
-      .where(
-        and(
-          eq(userStats.userId, user.id),
-          isNull(userStats.completedAt),
-        ),
-      )
-      .orderBy(desc(userStats.startedAt))
-      .limit(1)
-      .get();
+    const row = await timedQuery(metrics, "select", "user_stats", () =>
+      db
+        .select({
+          puzzleId: userStats.puzzleId,
+          difficultyLabel: puzzles.difficultyLabel,
+          timeSeconds: userStats.timeSeconds,
+        })
+        .from(userStats)
+        .innerJoin(puzzles, eq(userStats.puzzleId, puzzles.id))
+        .where(
+          and(
+            eq(userStats.userId, user.id),
+            isNull(userStats.completedAt),
+          ),
+        )
+        .orderBy(desc(userStats.startedAt))
+        .limit(1)
+        .get(),
+    );
     if (row) inProgress = row;
   }
 

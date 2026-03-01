@@ -20,6 +20,7 @@ import { puzzles, userStats } from "~/db/schema";
 import type { InputMode as GameInputMode } from "~/hooks/use-game";
 import { useGame, type SavePayload } from "~/hooks/use-game";
 import { getSessionUser } from "~/lib/auth/auth.server";
+import { getMetrics, trackEvent, timedQuery } from "~/lib/metrics";
 import { getHint } from "~/lib/hints";
 import { cn, formatTime, DIFFICULTY_RANGES, DATA_CACHE_NAME } from "~/lib/utils";
 import type { SolveStep, Technique } from "../../lib/sudoku/types";
@@ -54,27 +55,32 @@ const TECHNIQUE_DISPLAY_NAMES: Record<Technique, string> = {
 export async function loader({ params, request, context }: LoaderFunctionArgs) {
   const { cloudflare } = context as { cloudflare: { env: Env } };
   const db = getDb(cloudflare.env.DB);
+  const metrics = getMetrics(cloudflare.env);
 
-  const puzzle = await db
-    .select()
-    .from(puzzles)
-    .where(eq(puzzles.id, params.puzzleId!))
-    .get();
+  const puzzle = await timedQuery(metrics, "select", "puzzles", () =>
+    db
+      .select()
+      .from(puzzles)
+      .where(eq(puzzles.id, params.puzzleId!))
+      .get(),
+  );
   if (!puzzle) throw new Response("Puzzle not found", { status: 404 });
 
   let progress = null;
   const user = await getSessionUser(request, cloudflare.env);
   if (user) {
-    const existing = await db
-      .select()
-      .from(userStats)
-      .where(
-        and(
-          eq(userStats.userId, user.id),
-          eq(userStats.puzzleId, params.puzzleId!),
-        ),
-      )
-      .get();
+    const existing = await timedQuery(metrics, "select", "user_stats", () =>
+      db
+        .select()
+        .from(userStats)
+        .where(
+          and(
+            eq(userStats.userId, user.id),
+            eq(userStats.puzzleId, params.puzzleId!),
+          ),
+        )
+        .get(),
+    );
     if (existing && !existing.completedAt) {
       progress = {
         boardState: existing.boardState ?? "",
@@ -82,6 +88,10 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
         timeSeconds: existing.timeSeconds ?? 0,
         updatedAt: existing.updatedAt ?? null,
       };
+      trackEvent(metrics, "game_resume", {
+        userId: user.id,
+        detail: puzzle.difficultyLabel,
+      });
     }
   }
 

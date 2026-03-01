@@ -1,5 +1,6 @@
 import * as Sentry from "@sentry/cloudflare";
 import { createRequestHandler } from "react-router";
+import { getMetrics, trackRequest } from "~/lib/metrics";
 
 declare module "react-router" {
   export interface AppLoadContext {
@@ -22,9 +23,23 @@ export default Sentry.withSentry(
   }),
   {
     async fetch(request, env, ctx) {
-      return requestHandler(request, {
+      const start = Date.now();
+      const response = requestHandler(request, {
         cloudflare: { env, ctx },
       });
+      
+      const metrics = getMetrics(env);
+      if (metrics) {
+        const url = new URL(request.url);
+        trackRequest(metrics, {
+          route: url.pathname,
+          method: request.method,
+          status: response.status,
+          durationMs: Date.now() - start,
+        });
+      }
+
+      return response;
     },
   } satisfies ExportedHandler<Env>,
 );

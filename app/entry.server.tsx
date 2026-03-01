@@ -3,16 +3,19 @@ import type { AppLoadContext, EntryContext } from "react-router";
 import { ServerRouter } from "react-router";
 import { isbot } from "isbot";
 import { renderToReadableStream } from "react-dom/server";
+import { getMetrics, trackEvent } from "~/lib/metrics";
 
 export default async function handleRequest(
   request: Request,
   responseStatusCode: number,
   responseHeaders: Headers,
   routerContext: EntryContext,
-  _loadContext: AppLoadContext
+  loadContext: AppLoadContext
 ) {
   let shellRendered = false;
   const userAgent = request.headers.get("user-agent");
+  const { cloudflare } = loadContext as { cloudflare: { env: Env } };
+  const metrics = getMetrics(cloudflare.env);
 
   const body = await renderToReadableStream(
     <ServerRouter context={routerContext} url={request.url} />,
@@ -26,6 +29,10 @@ export default async function handleRequest(
           Sentry.captureException(error);
           console.error(error);
         }
+        const message = error instanceof Error ? error.message : "unknown";
+        trackEvent(metrics, "ssr_error", {
+          detail: message.slice(0, 200),
+        });
       },
     }
   );

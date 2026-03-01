@@ -3,6 +3,7 @@ import { getDb } from "~/db";
 import { puzzles } from "~/db/schema";
 import { and, gte, lte, sql } from "drizzle-orm";
 import { apiError } from "~/lib/api";
+import { getMetrics, trackEvent, timedQuery } from "~/lib/metrics";
 
 export async function loader({ request, context }: LoaderFunctionArgs) {
   const { cloudflare } = context as { cloudflare: { env: Env } };
@@ -11,22 +12,30 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
   const max = parseFloat(url.searchParams.get("max") ?? "100");
 
   const db = getDb(cloudflare.env.DB);
-  const puzzle = await db
-    .select({ id: puzzles.id })
-    .from(puzzles)
-    .where(
-      and(
-        gte(puzzles.difficultyScore, min),
-        lte(puzzles.difficultyScore, max)
+  const metrics = getMetrics(cloudflare.env);
+
+  const puzzle = await timedQuery(metrics, "select", "puzzles", () =>
+    db
+      .select({ id: puzzles.id })
+      .from(puzzles)
+      .where(
+        and(
+          gte(puzzles.difficultyScore, min),
+          lte(puzzles.difficultyScore, max)
+        )
       )
-    )
-    .orderBy(sql`RANDOM()`)
-    .limit(1)
-    .get();
+      .orderBy(sql`RANDOM()`)
+      .limit(1)
+      .get(),
+  );
 
   if (!puzzle) {
     return apiError("No puzzles in range", 404);
   }
+
+  trackEvent(metrics, "new_game", {
+    detail: `${min}-${max}`,
+  });
 
   return Response.json({ puzzleId: puzzle.id });
 }

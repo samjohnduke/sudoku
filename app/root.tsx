@@ -15,11 +15,15 @@ import { getSessionUser } from "~/lib/auth/auth.server";
 import { Header } from "~/components/layout/header";
 import { PwaUpdateBanner } from "~/components/layout/pwa-update-banner";
 import { syncOfflineSaves } from "~/lib/sync";
+import { getMetrics, trackDbQuery } from "~/lib/metrics";
 import "./app.css";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   const { cloudflare } = context as { cloudflare: { env: Env } };
+  const metrics = getMetrics(cloudflare.env);
+  const start = Date.now();
   const user = await getSessionUser(request, cloudflare.env);
+  trackDbQuery(metrics, { operation: "session", table: "session", durationMs: Date.now() - start });
   return { user };
 }
 

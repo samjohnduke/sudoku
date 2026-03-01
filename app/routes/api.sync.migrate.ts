@@ -4,6 +4,7 @@ import { userStats, userSettings } from "~/db/schema";
 import { eq, and } from "drizzle-orm";
 import { apiError, apiSuccess } from "~/lib/api";
 import { getSessionUser } from "~/lib/auth/auth.server";
+import { getMetrics, trackEvent, timedQuery } from "~/lib/metrics";
 
 interface MigrateCurrentGame {
   puzzleId: string;
@@ -47,6 +48,7 @@ function validateMigrateBody(data: unknown): data is MigrateBody {
 export async function action({ request, context }: ActionFunctionArgs) {
   const { cloudflare } = context as { cloudflare: { env: Env } };
   const db = getDb(cloudflare.env.DB);
+  const metrics = getMetrics(cloudflare.env);
 
   const user = await getSessionUser(request, cloudflare.env);
   if (!user) {
@@ -73,47 +75,59 @@ export async function action({ request, context }: ActionFunctionArgs) {
   if (body.currentGame) {
     const { puzzleId, boardState, notesSnapshot, timeSeconds } =
       body.currentGame;
-    const existing = await db
-      .select()
-      .from(userStats)
-      .where(and(eq(userStats.userId, userId), eq(userStats.puzzleId, puzzleId)))
-      .get();
+    const existing = await timedQuery(metrics, "select", "user_stats", () =>
+      db
+        .select()
+        .from(userStats)
+        .where(and(eq(userStats.userId, userId), eq(userStats.puzzleId, puzzleId)))
+        .get(),
+    );
 
     // Only insert if there is no existing server record (don't overwrite newer data)
     if (!existing) {
-      await db.insert(userStats).values({
-        id: crypto.randomUUID(),
-        userId,
-        puzzleId,
-        startedAt: new Date().toISOString(),
-        boardState,
-        notesSnapshot,
-        timeSeconds,
-      });
+      await timedQuery(metrics, "insert", "user_stats", () =>
+        db.insert(userStats).values({
+          id: crypto.randomUUID(),
+          userId,
+          puzzleId,
+          startedAt: new Date().toISOString(),
+          boardState,
+          notesSnapshot,
+          timeSeconds,
+        }),
+      );
     }
   }
 
   // Migrate settings
   if (body.settings) {
-    const existing = await db
-      .select()
-      .from(userSettings)
-      .where(eq(userSettings.userId, userId))
-      .get();
+    const existing = await timedQuery(metrics, "select", "user_settings", () =>
+      db
+        .select()
+        .from(userSettings)
+        .where(eq(userSettings.userId, userId))
+        .get(),
+    );
 
     if (existing) {
-      await db
-        .update(userSettings)
-        .set({ settings: body.settings })
-        .where(eq(userSettings.id, existing.id));
+      await timedQuery(metrics, "update", "user_settings", () =>
+        db
+          .update(userSettings)
+          .set({ settings: body.settings! })
+          .where(eq(userSettings.id, existing.id)),
+      );
     } else {
-      await db.insert(userSettings).values({
-        id: crypto.randomUUID(),
-        userId,
-        settings: body.settings,
-      });
+      await timedQuery(metrics, "insert", "user_settings", () =>
+        db.insert(userSettings).values({
+          id: crypto.randomUUID(),
+          userId,
+          settings: body.settings!,
+        }),
+      );
     }
   }
+
+  trackEvent(metrics, "sync_migrate", { userId: user.id });
 
   return apiSuccess();
 }

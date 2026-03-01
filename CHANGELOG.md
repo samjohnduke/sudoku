@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
+- Declare secret env bindings for CI typecheck by @samjohnduke ([ad6f688](https://github.com/samjohnduke/sudoku/commit/ad6f6887f7cce7e798d5d618ad7daf865f5e58fe))
+
 - Generate worker types in CI before typecheck by @samjohnduke ([068e6dc](https://github.com/samjohnduke/sudoku/commit/068e6dcdd0a9d296da9bfdf0801de22b1cebbb00))
 
 - Add w-full to page containers so children fill width by @samjohnduke ([7284532](https://github.com/samjohnduke/sudoku/commit/7284532a7f5629bfb01880ec770d82c449d4d139))
@@ -34,6 +36,8 @@ All notable changes to this project will be documented in this file.
 
 
 ### Documentation
+
+- Update changelog [skip ci] by @github-actions[bot] ([bcc8638](https://github.com/samjohnduke/sudoku/commit/bcc863858141603ee4a3f0180281f271f441dbfb))
 
 - Update changelog [skip ci] by @github-actions[bot] ([4a265b1](https://github.com/samjohnduke/sudoku/commit/4a265b1e3771fc0b5ba77a45cb220352e533e6a3))
 

@@ -18,7 +18,7 @@ export default function AccountPage() {
   }
 
   return (
-    <div className="max-w-xl mx-auto px-5 py-8 pb-20 sm:pb-8 space-y-6">
+    <div className="w-full max-w-xl mx-auto px-5 py-8 pb-20 sm:pb-8 space-y-6">
         <h1 className="text-3xl font-bold tracking-tight font-serif">Account</h1>
 
         {user ? (

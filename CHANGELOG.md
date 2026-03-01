@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
+- Await requestHandler to resolve Promise<Response> before accessing .status by @samjohnduke ([d184a53](https://github.com/samjohnduke/sudoku/commit/d184a535fec1d4b4c48d8fbf5c3c63c591e7586e))
+
 - Persist game timer when user leaves the page by @samjohnduke ([174c895](https://github.com/samjohnduke/sudoku/commit/174c89547e9c1c64082a59faceb00e65a170349f))
 
 - Save new game to localStorage immediately on mount by @samjohnduke ([15ad2e4](https://github.com/samjohnduke/sudoku/commit/15ad2e49a70f2c33a8b6b0f1c48668f48281bc8e))
@@ -46,6 +48,8 @@ All notable changes to this project will be documented in this file.
 
 
 ### Documentation
+
+- Update changelog [skip ci] by @github-actions[bot] ([c0359e7](https://github.com/samjohnduke/sudoku/commit/c0359e73ff8c4fa21a4555cddb086b0d56bb64c3))
 
 - Update changelog [skip ci] by @github-actions[bot] ([a96e7ca](https://github.com/samjohnduke/sudoku/commit/a96e7cad6c3a1adffaebaa75cbb61d54e6033960))
 

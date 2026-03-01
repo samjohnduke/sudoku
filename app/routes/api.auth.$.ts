@@ -28,7 +28,17 @@ async function handleAuth(
 
   const eventName = getAuthEventName(new URL(request.url));
   if (eventName && response.ok) {
-    trackEvent(getMetrics(cloudflare.env), eventName);
+    const metrics = getMetrics(cloudflare.env);
+    // Try to extract user ID from auth response body
+    let userId: string | undefined;
+    try {
+      const clone = response.clone();
+      const data = (await clone.json()) as { user?: { id?: string } };
+      userId = data?.user?.id;
+    } catch {
+      // not JSON or no user field — track without userId
+    }
+    trackEvent(metrics, eventName, { userId });
   }
 
   return response;

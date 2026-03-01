@@ -17,6 +17,7 @@ import { getDb } from "~/db";
 import { userSettings } from "~/db/schema";
 import { authClient } from "~/lib/auth/auth-client";
 import { getSessionUser } from "~/lib/auth/auth.server";
+import { getMetrics, timedQuery } from "~/lib/metrics";
 import type { Route } from "./+types/settings";
 
 const SETTINGS_KEY = "super_sudoku_settings";
@@ -64,11 +65,14 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   if (user) {
     try {
       const db = getDb(cloudflare.env.DB);
-      const row = await db
-        .select()
-        .from(userSettings)
-        .where(eq(userSettings.userId, user.id))
-        .get();
+      const metrics = getMetrics(cloudflare.env);
+      const row = await timedQuery(metrics, "select", "user_settings", () =>
+        db
+          .select()
+          .from(userSettings)
+          .where(eq(userSettings.userId, user.id))
+          .get(),
+      );
       if (row) {
         serverSettings = JSON.parse(row.settings);
       }

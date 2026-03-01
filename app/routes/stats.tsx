@@ -11,6 +11,7 @@ import {
 import { getDb } from "~/db";
 import { puzzles, userStats } from "~/db/schema";
 import { getSessionUser } from "~/lib/auth/auth.server";
+import { getMetrics, timedQuery } from "~/lib/metrics";
 import { formatTime } from "~/lib/utils";
 import type { Route } from "./+types/stats";
 
@@ -68,45 +69,50 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
   try {
     const db = getDb(cloudflare.env.DB);
+    const metrics = getMetrics(cloudflare.env);
 
     // Completed games with difficulty labels
-    const completed = await db
-      .select({
-        timeSeconds: userStats.timeSeconds,
-        completedAt: userStats.completedAt,
-        difficultyLabel: puzzles.difficultyLabel,
-        puzzleId: userStats.puzzleId,
-      })
-      .from(userStats)
-      .innerJoin(puzzles, eq(userStats.puzzleId, puzzles.id))
-      .where(
-        and(
-          eq(userStats.userId, user.id),
-          isNotNull(userStats.completedAt),
-        ),
-      )
-      .orderBy(desc(userStats.completedAt))
-      .all();
+    const completed = await timedQuery(metrics, "select", "user_stats", () =>
+      db
+        .select({
+          timeSeconds: userStats.timeSeconds,
+          completedAt: userStats.completedAt,
+          difficultyLabel: puzzles.difficultyLabel,
+          puzzleId: userStats.puzzleId,
+        })
+        .from(userStats)
+        .innerJoin(puzzles, eq(userStats.puzzleId, puzzles.id))
+        .where(
+          and(
+            eq(userStats.userId, user.id),
+            isNotNull(userStats.completedAt),
+          ),
+        )
+        .orderBy(desc(userStats.completedAt))
+        .all(),
+    );
 
     // In-progress game (most recent incomplete)
-    const inProgress = await db
-      .select({
-        puzzleId: userStats.puzzleId,
-        timeSeconds: userStats.timeSeconds,
-        startedAt: userStats.startedAt,
-        difficultyLabel: puzzles.difficultyLabel,
-      })
-      .from(userStats)
-      .innerJoin(puzzles, eq(userStats.puzzleId, puzzles.id))
-      .where(
-        and(
-          eq(userStats.userId, user.id),
-          isNull(userStats.completedAt),
-        ),
-      )
-      .orderBy(desc(userStats.startedAt))
-      .limit(1)
-      .all();
+    const inProgress = await timedQuery(metrics, "select", "user_stats", () =>
+      db
+        .select({
+          puzzleId: userStats.puzzleId,
+          timeSeconds: userStats.timeSeconds,
+          startedAt: userStats.startedAt,
+          difficultyLabel: puzzles.difficultyLabel,
+        })
+        .from(userStats)
+        .innerJoin(puzzles, eq(userStats.puzzleId, puzzles.id))
+        .where(
+          and(
+            eq(userStats.userId, user.id),
+            isNull(userStats.completedAt),
+          ),
+        )
+        .orderBy(desc(userStats.startedAt))
+        .limit(1)
+        .all(),
+    );
 
     const validCompleted = completed.filter(
       (g): g is CompletedGame =>

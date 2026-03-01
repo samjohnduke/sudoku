@@ -125,6 +125,7 @@ export async function action({ request, context }: ActionFunctionArgs) {
         updatedAt: now,
       }),
     );
+    trackEvent(metrics, "game_start", { userId: user.id });
   }
 
   trackEvent(metrics, "game_save", { userId: user.id });

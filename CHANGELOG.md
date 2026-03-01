@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
+- Persist game timer when user leaves the page by @samjohnduke ([174c895](https://github.com/samjohnduke/sudoku/commit/174c89547e9c1c64082a59faceb00e65a170349f))
+
 - Save new game to localStorage immediately on mount by @samjohnduke ([15ad2e4](https://github.com/samjohnduke/sudoku/commit/15ad2e49a70f2c33a8b6b0f1c48668f48281bc8e))
 
 - Add build step before deploy in CI by @samjohnduke ([60e4a9f](https://github.com/samjohnduke/sudoku/commit/60e4a9f6803a0009d6958d7f27e4c8e03bd432c2))
@@ -44,6 +46,8 @@ All notable changes to this project will be documented in this file.
 
 
 ### Documentation
+
+- Update changelog [skip ci] by @github-actions[bot] ([833f84f](https://github.com/samjohnduke/sudoku/commit/833f84f788257c0e8e2df41af1ca8f847149cb80))
 
 - Update changelog [skip ci] by @github-actions[bot] ([5a9df7f](https://github.com/samjohnduke/sudoku/commit/5a9df7fad46254f1c409ac1b22d74d3346cdee6a))
 

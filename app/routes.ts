@@ -13,4 +13,5 @@ export default [
   route("settings", "routes/settings.tsx"),
   route("api/settings", "routes/api.settings.ts"),
   route("stats", "routes/stats.tsx"),
+  route("account", "routes/account.tsx"),
 ] satisfies RouteConfig;

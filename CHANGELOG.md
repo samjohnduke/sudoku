@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
+- Save new game to localStorage immediately on mount by @samjohnduke ([15ad2e4](https://github.com/samjohnduke/sudoku/commit/15ad2e49a70f2c33a8b6b0f1c48668f48281bc8e))
+
 - Add build step before deploy in CI by @samjohnduke ([60e4a9f](https://github.com/samjohnduke/sudoku/commit/60e4a9f6803a0009d6958d7f27e4c8e03bd432c2))
 
 - Pass CLOUDFLARE_ACCOUNT_ID to deploy step by @samjohnduke ([29620ae](https://github.com/samjohnduke/sudoku/commit/29620ae9888b95739b5f526dd20b8003fa6414ad))
@@ -42,6 +44,8 @@ All notable changes to this project will be documented in this file.
 
 
 ### Documentation
+
+- Update changelog [skip ci] by @github-actions[bot] ([5a9df7f](https://github.com/samjohnduke/sudoku/commit/5a9df7fad46254f1c409ac1b22d74d3346cdee6a))
 
 - Update changelog [skip ci] by @github-actions[bot] ([1df3802](https://github.com/samjohnduke/sudoku/commit/1df38029a16d869b677d5da57d9d9acb777bcd4b))
 

@@ -20,3 +20,6 @@ export const DIFFICULTY_RANGES: Record<string, [number, number]> = {
   Hard: [60, 80],
   Expert: [80, 100],
 };
+
+/** Must match DATA_CACHE in public/sw.js */
+export const DATA_CACHE_NAME = "data-v2";

@@ -1,6 +1,6 @@
 import { and, eq } from "drizzle-orm";
 import { useCallback, useEffect, useState } from "react";
-import type { LoaderFunctionArgs } from "react-router";
+import type { ClientLoaderFunctionArgs, LoaderFunctionArgs } from "react-router";
 import { Link, useLoaderData, useNavigate, useParams } from "react-router";
 import { Board } from "~/components/sudoku/board";
 import { NumberPad, type InputMode as PadInputMode } from "~/components/sudoku/number-pad";
@@ -21,7 +21,7 @@ import type { InputMode as GameInputMode } from "~/hooks/use-game";
 import { useGame, type SavePayload } from "~/hooks/use-game";
 import { getSessionUser } from "~/lib/auth/auth.server";
 import { getHint } from "~/lib/hints";
-import { cn, formatTime, DIFFICULTY_RANGES } from "~/lib/utils";
+import { cn, formatTime, DIFFICULTY_RANGES, DATA_CACHE_NAME } from "~/lib/utils";
 import type { SolveStep, Technique } from "../../lib/sudoku/types";
 
 // ---------------------------------------------------------------------------
@@ -97,6 +97,43 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
   };
 }
 
+const LOCAL_SAVE_PREFIX = "super_sudoku_progress_";
+
+export async function clientLoader({ params, serverLoader }: ClientLoaderFunctionArgs) {
+  try {
+    return await serverLoader<typeof loader>();
+  } catch {
+    // Offline — load puzzle from SW cache, progress from localStorage
+    const puzzleId = params.puzzleId!;
+    const cache = await caches.open(DATA_CACHE_NAME);
+    const response = await cache.match("/api/puzzles/all");
+    if (!response) throw new Response("Puzzle not available offline", { status: 404 });
+
+    const allPuzzles = (await response.json()) as GameViewProps["puzzle"][];
+    const puzzle = allPuzzles.find((p) => p.id === puzzleId);
+    if (!puzzle) throw new Response("Puzzle not found in cache", { status: 404 });
+
+    // Try to restore progress from localStorage
+    let progress = null;
+    try {
+      const raw = localStorage.getItem(LOCAL_SAVE_PREFIX + puzzleId);
+      if (raw) {
+        const saved = JSON.parse(raw) as SavePayload;
+        progress = {
+          boardState: saved.boardState,
+          notes: saved.notesSnapshot,
+          timeSeconds: saved.timeSeconds,
+        };
+      }
+    } catch {
+      // ignore bad data
+    }
+
+    return { puzzle, progress };
+  }
+}
+clientLoader.hydrate = true as const;
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -120,8 +157,6 @@ function loadSettings(): GameSettings {
   }
   return DEFAULT_SETTINGS;
 }
-
-const LOCAL_SAVE_PREFIX = "super_sudoku_progress_";
 
 /** Map NumberPad modes to useGame modes */
 function padModeToGameMode(m: PadInputMode): GameInputMode {
@@ -409,7 +444,7 @@ export function ErrorBoundary() {
   useEffect(() => {
     async function loadFromCache() {
       try {
-        const cache = await caches.open("data-v1");
+        const cache = await caches.open(DATA_CACHE_NAME);
         const response = await cache.match("/api/puzzles/all");
         if (!response) {
           setLoadError(true);

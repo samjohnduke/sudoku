@@ -227,7 +227,7 @@ function GameView({ puzzle, progress }: GameViewProps) {
   const [hintCells, setHintCells] = useState<number[]>([]);
 
   const handleHint = useCallback(() => {
-    const step = getHint(game.current);
+    const step = getHint(initial, game.current, solution);
     if (step) {
       setHint(step);
       // Convert [row, col] pairs to flat indices
@@ -236,7 +236,7 @@ function GameView({ puzzle, progress }: GameViewProps) {
       setHint(null);
       setHintCells([]);
     }
-  }, [game.current]);
+  }, [initial, game.current, solution]);
 
   // Clear hint when user makes a move (detect by board state change)
   const boardKey = game.current.join("");

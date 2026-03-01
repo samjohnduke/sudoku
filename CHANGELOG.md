@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
+- Include env.d.ts in tsconfig so secret types are found by @samjohnduke ([0b4760a](https://github.com/samjohnduke/sudoku/commit/0b4760aa5de92bea7ea68dc15a1c3cea2d2df30c))
+
 - Declare secret env bindings for CI typecheck by @samjohnduke ([ad6f688](https://github.com/samjohnduke/sudoku/commit/ad6f6887f7cce7e798d5d618ad7daf865f5e58fe))
 
 - Generate worker types in CI before typecheck by @samjohnduke ([068e6dc](https://github.com/samjohnduke/sudoku/commit/068e6dcdd0a9d296da9bfdf0801de22b1cebbb00))
@@ -36,6 +38,8 @@ All notable changes to this project will be documented in this file.
 
 
 ### Documentation
+
+- Update changelog [skip ci] by @github-actions[bot] ([e65cdd6](https://github.com/samjohnduke/sudoku/commit/e65cdd64a20e37bb5c72bebb8f565f546e4c06a1))
 
 - Update changelog [skip ci] by @github-actions[bot] ([bcc8638](https://github.com/samjohnduke/sudoku/commit/bcc863858141603ee4a3f0180281f271f441dbfb))
 

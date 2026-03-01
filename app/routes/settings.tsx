@@ -80,6 +80,15 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   return { serverSettings };
 }
 
+export async function clientLoader({ serverLoader }: Route.ClientLoaderArgs) {
+  try {
+    return await serverLoader();
+  } catch {
+    return { serverSettings: null };
+  }
+}
+clientLoader.hydrate = true as const;
+
 export default function SettingsPage({ loaderData }: Route.ComponentProps) {
   const { serverSettings } = loaderData;
   const { user } = useOutletContext<{

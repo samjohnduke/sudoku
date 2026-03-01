@@ -1,4 +1,4 @@
-var CACHE_VERSION = "v1";
+var CACHE_VERSION = "v2";
 var STATIC_CACHE = "static-" + CACHE_VERSION;
 var DATA_CACHE = "data-" + CACHE_VERSION;
 
@@ -25,10 +25,13 @@ self.addEventListener("install", function (event) {
   );
 });
 
-// Activate: clean up old caches
+// Activate: clean up old caches and notify clients of update
 self.addEventListener("activate", function (event) {
   event.waitUntil(
     caches.keys().then(function (keys) {
+      var hadOldCaches = keys.some(function (key) {
+        return key !== STATIC_CACHE && key !== DATA_CACHE;
+      });
       return Promise.all(
         keys
           .filter(function (key) {
@@ -37,8 +40,17 @@ self.addEventListener("activate", function (event) {
           .map(function (key) {
             return caches.delete(key);
           })
-      );
-    }).then(function () {
+      ).then(function () {
+        return hadOldCaches;
+      });
+    }).then(function (hadOldCaches) {
+      if (hadOldCaches) {
+        self.clients.matchAll().then(function (clients) {
+          clients.forEach(function (client) {
+            client.postMessage({ type: "SW_UPDATED" });
+          });
+        });
+      }
       return self.clients.claim();
     })
   );

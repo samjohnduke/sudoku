@@ -5,27 +5,53 @@ import { eq, and } from "drizzle-orm";
 import { apiError, apiSuccess } from "~/lib/api";
 import { getSessionUser } from "~/lib/auth/auth.server";
 
-interface SaveGameBody {
+export interface SaveGameBody {
   puzzleId: string;
   boardState: string;
   notesSnapshot: string;
   timeSeconds: number;
   completed: boolean;
+  /** ISO timestamp from the client. When present (offline sync), the server
+   *  will only write if this is newer than the existing `updated_at`. */
+  savedAt?: string;
 }
 
-function validateSaveBody(data: unknown): data is SaveGameBody {
+export function validateSaveBody(data: unknown): data is SaveGameBody {
   if (typeof data !== "object" || data === null) return false;
   const obj = data as Record<string, unknown>;
-  return (
-    typeof obj.puzzleId === "string" &&
-    obj.puzzleId.length > 0 &&
-    typeof obj.boardState === "string" &&
-    typeof obj.notesSnapshot === "string" &&
-    typeof obj.timeSeconds === "number" &&
-    Number.isFinite(obj.timeSeconds) &&
-    obj.timeSeconds >= 0 &&
-    typeof obj.completed === "boolean"
-  );
+  if (
+    typeof obj.puzzleId !== "string" ||
+    obj.puzzleId.length === 0 ||
+    typeof obj.boardState !== "string" ||
+    typeof obj.notesSnapshot !== "string" ||
+    typeof obj.timeSeconds !== "number" ||
+    !Number.isFinite(obj.timeSeconds) ||
+    obj.timeSeconds < 0 ||
+    typeof obj.completed !== "boolean"
+  ) {
+    return false;
+  }
+  if (obj.savedAt !== undefined && typeof obj.savedAt !== "string") {
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Determines whether an offline sync save should be skipped.
+ * Returns true if the existing server record is newer or the save would
+ * un-complete a finished puzzle.
+ */
+export function shouldSkipSave(
+  body: SaveGameBody,
+  existing: { completedAt: string | null; updatedAt: string | null },
+): boolean {
+  if (!body.savedAt) return false;
+  // Never overwrite a completed puzzle with in-progress data
+  if (existing.completedAt && !body.completed) return true;
+  // Skip if server has a newer update
+  if (existing.updatedAt && body.savedAt <= existing.updatedAt) return true;
+  return false;
 }
 
 export async function action({ request, context }: ActionFunctionArgs) {
@@ -51,6 +77,8 @@ export async function action({ request, context }: ActionFunctionArgs) {
     );
   }
 
+  const now = new Date().toISOString();
+
   const existing = await db
     .select()
     .from(userStats)
@@ -63,6 +91,10 @@ export async function action({ request, context }: ActionFunctionArgs) {
     .get();
 
   if (existing) {
+    if (shouldSkipSave(body, existing)) {
+      return apiSuccess({ skipped: true });
+    }
+
     await db
       .update(userStats)
       .set({
@@ -70,6 +102,7 @@ export async function action({ request, context }: ActionFunctionArgs) {
         notesSnapshot: body.notesSnapshot,
         timeSeconds: body.timeSeconds,
         completedAt: body.completed ? new Date().toISOString() : null,
+        updatedAt: now,
       })
       .where(eq(userStats.id, existing.id));
   } else {
@@ -77,11 +110,12 @@ export async function action({ request, context }: ActionFunctionArgs) {
       id: crypto.randomUUID(),
       userId: user.id,
       puzzleId: body.puzzleId,
-      startedAt: new Date().toISOString(),
+      startedAt: now,
       boardState: body.boardState,
       notesSnapshot: body.notesSnapshot,
       timeSeconds: body.timeSeconds,
       completedAt: body.completed ? new Date().toISOString() : null,
+      updatedAt: now,
     });
   }
 

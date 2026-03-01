@@ -1,4 +1,5 @@
 import * as Sentry from "@sentry/react";
+import { useEffect } from "react";
 import {
   isRouteErrorResponse,
   Links,
@@ -12,6 +13,8 @@ import {
 import type { Route } from "./+types/root";
 import { getSessionUser } from "~/lib/auth/auth.server";
 import { Header } from "~/components/layout/header";
+import { PwaUpdateBanner } from "~/components/layout/pwa-update-banner";
+import { syncOfflineSaves } from "~/lib/sync";
 import "./app.css";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
@@ -69,12 +72,24 @@ export function Layout({ children }: { children: React.ReactNode }) {
 export default function App() {
   const { user } = useLoaderData<typeof loader>();
 
+  // Sync offline saves when connectivity is restored
+  useEffect(() => {
+    const handleOnline = () => syncOfflineSaves();
+    window.addEventListener("online", handleOnline);
+
+    // Also try on mount in case we're already online with pending saves
+    if (navigator.onLine) syncOfflineSaves();
+
+    return () => window.removeEventListener("online", handleOnline);
+  }, []);
+
   return (
     <div className="flex min-h-dvh flex-col">
       <Header user={user} />
       <main id="main-content" className="flex flex-1 flex-col">
         <Outlet context={{ user }} />
       </main>
+      <PwaUpdateBanner />
     </div>
   );
 }

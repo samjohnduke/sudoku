@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/cloudflare";
 import type { AppLoadContext, EntryContext } from "react-router";
 import { ServerRouter } from "react-router";
 import { isbot } from "isbot";
@@ -22,6 +23,7 @@ export default async function handleRequest(
         // errors encountered during initial shell rendering since they'll
         // reject and get logged in handleDocumentRequest.
         if (shellRendered) {
+          Sentry.captureException(error);
           console.error(error);
         }
       },

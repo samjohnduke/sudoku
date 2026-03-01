@@ -1,6 +1,6 @@
 import { and, eq } from "drizzle-orm";
 import { useCallback, useEffect, useState } from "react";
-import type { LoaderFunctionArgs } from "react-router";
+import type { ClientLoaderFunctionArgs, LoaderFunctionArgs } from "react-router";
 import { Link, useLoaderData, useNavigate, useParams } from "react-router";
 import { Board } from "~/components/sudoku/board";
 import { NumberPad, type InputMode as PadInputMode } from "~/components/sudoku/number-pad";
@@ -21,7 +21,7 @@ import type { InputMode as GameInputMode } from "~/hooks/use-game";
 import { useGame, type SavePayload } from "~/hooks/use-game";
 import { getSessionUser } from "~/lib/auth/auth.server";
 import { getHint } from "~/lib/hints";
-import { cn, formatTime, DIFFICULTY_RANGES } from "~/lib/utils";
+import { cn, formatTime, DIFFICULTY_RANGES, DATA_CACHE_NAME } from "~/lib/utils";
 import type { SolveStep, Technique } from "../../lib/sudoku/types";
 
 // ---------------------------------------------------------------------------
@@ -80,6 +80,7 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
         boardState: existing.boardState ?? "",
         notes: existing.notesSnapshot ?? "{}",
         timeSeconds: existing.timeSeconds ?? 0,
+        updatedAt: existing.updatedAt ?? null,
       };
     }
   }
@@ -96,6 +97,86 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
     progress,
   };
 }
+
+const LOCAL_SAVE_PREFIX = "super_sudoku_progress_";
+
+/** Read a localStorage save entry, if it exists and is valid. */
+export function getLocalProgress(puzzleId: string) {
+  try {
+    const raw = localStorage.getItem(LOCAL_SAVE_PREFIX + puzzleId);
+    if (!raw) return null;
+    const saved = JSON.parse(raw) as SavePayload & { savedAt?: string };
+    return {
+      boardState: saved.boardState,
+      notes: saved.notesSnapshot,
+      timeSeconds: saved.timeSeconds,
+      savedAt: saved.savedAt ?? null,
+    };
+  } catch {
+    return null;
+  }
+}
+
+type Progress = { boardState: string; notes: string; timeSeconds: number; updatedAt: string | null };
+type LocalProgress = { boardState: string; notes: string; timeSeconds: number; savedAt: string | null };
+
+/**
+ * Pick the best progress from server vs localStorage.
+ * Returns the merged progress (may be server, local, or null).
+ */
+export function mergeProgress(
+  serverProgress: Progress | null,
+  localProgress: LocalProgress | null,
+): Progress | null {
+  if (localProgress?.savedAt && serverProgress) {
+    const serverUpdated = serverProgress.updatedAt;
+    if (!serverUpdated || localProgress.savedAt > serverUpdated) {
+      return {
+        boardState: localProgress.boardState,
+        notes: localProgress.notes,
+        timeSeconds: localProgress.timeSeconds,
+        updatedAt: localProgress.savedAt,
+      };
+    }
+    return serverProgress;
+  }
+  if (localProgress && !serverProgress) {
+    return {
+      boardState: localProgress.boardState,
+      notes: localProgress.notes,
+      timeSeconds: localProgress.timeSeconds,
+      updatedAt: localProgress.savedAt,
+    };
+  }
+  return serverProgress;
+}
+
+export async function clientLoader({ params, serverLoader }: ClientLoaderFunctionArgs) {
+  const puzzleId = params.puzzleId!;
+
+  try {
+    const data = await serverLoader<typeof loader>();
+    data.progress = mergeProgress(data.progress, getLocalProgress(puzzleId));
+    return data;
+  } catch {
+    // Offline — load puzzle from SW cache, progress from localStorage
+    const cache = await caches.open(DATA_CACHE_NAME);
+    const response = await cache.match("/api/puzzles/all");
+    if (!response) throw new Response("Puzzle not available offline", { status: 404 });
+
+    const allPuzzles = (await response.json()) as GameViewProps["puzzle"][];
+    const puzzle = allPuzzles.find((p) => p.id === puzzleId);
+    if (!puzzle) throw new Response("Puzzle not found in cache", { status: 404 });
+
+    const local = getLocalProgress(puzzleId);
+    const progress = local
+      ? { boardState: local.boardState, notes: local.notes, timeSeconds: local.timeSeconds }
+      : null;
+
+    return { puzzle, progress };
+  }
+}
+clientLoader.hydrate = true as const;
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -120,8 +201,6 @@ function loadSettings(): GameSettings {
   }
   return DEFAULT_SETTINGS;
 }
-
-const LOCAL_SAVE_PREFIX = "super_sudoku_progress_";
 
 /** Map NumberPad modes to useGame modes */
 function padModeToGameMode(m: PadInputMode): GameInputMode {
@@ -149,7 +228,7 @@ interface GameViewProps {
     difficultyLabel: string;
     techniquesRequired: string;
   };
-  progress: { boardState: string; notes: string; timeSeconds: number } | null;
+  progress: { boardState: string; notes: string; timeSeconds: number; updatedAt?: string | null } | null;
 }
 
 function GameView({ puzzle, progress }: GameViewProps) {
@@ -167,11 +246,11 @@ function GameView({ puzzle, progress }: GameViewProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(state),
       }).catch(() => {
-        // Not signed in or network error — save locally
+        // Not signed in or network error — save locally with timestamp
         try {
           localStorage.setItem(
             LOCAL_SAVE_PREFIX + state.puzzleId,
-            JSON.stringify(state),
+            JSON.stringify({ ...state, savedAt: new Date().toISOString() }),
           );
         } catch {
           // storage full — ignore
@@ -409,7 +488,7 @@ export function ErrorBoundary() {
   useEffect(() => {
     async function loadFromCache() {
       try {
-        const cache = await caches.open("data-v1");
+        const cache = await caches.open(DATA_CACHE_NAME);
         const response = await cache.match("/api/puzzles/all");
         if (!response) {
           setLoadError(true);

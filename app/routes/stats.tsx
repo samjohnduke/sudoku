@@ -154,6 +154,16 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   }
 }
 
+export async function clientLoader({ serverLoader }: Route.ClientLoaderArgs) {
+  try {
+    return await serverLoader();
+  } catch {
+    // Offline — fall back to anonymous view with localStorage stats
+    return { stats: null, signedIn: false };
+  }
+}
+clientLoader.hydrate = true as const;
+
 // ── SVG Charts ──
 
 const TimeTrendChart = memo(function TimeTrendChart({ games }: { games: CompletedGame[] }) {

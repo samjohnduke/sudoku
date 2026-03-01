@@ -184,3 +184,13 @@ body {
 .animate-slide-up {
   animation: slide-up 300ms ease-out forwards;
 }
+
+.animate-spin-slow {
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

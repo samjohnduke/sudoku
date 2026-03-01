@@ -7,7 +7,7 @@ import { Button } from "~/components/ui/button";
 import { getDb } from "~/db";
 import { puzzles, userStats } from "~/db/schema";
 import { getSessionUser } from "~/lib/auth/auth.server";
-import { cn, formatTime, DIFFICULTIES, DIFFICULTY_RANGES } from "~/lib/utils";
+import { cn, formatTime, DIFFICULTIES, DIFFICULTY_RANGES, DATA_CACHE_NAME } from "~/lib/utils";
 import type { Route } from "./+types/home";
 
 export function meta({}: Route.MetaArgs) {
@@ -60,6 +60,16 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   return { counts, inProgress };
 }
 
+export async function clientLoader({ serverLoader }: Route.ClientLoaderArgs) {
+  try {
+    return await serverLoader();
+  } catch {
+    // Offline or server error — render with empty data
+    return { counts: [], inProgress: null };
+  }
+}
+clientLoader.hydrate = true as const;
+
 interface CachedPuzzle {
   id: string;
   difficultyScore: number;
@@ -67,7 +77,7 @@ interface CachedPuzzle {
 
 async function getOfflineRandomPuzzle(min: number, max: number): Promise<string | null> {
   try {
-    const cache = await caches.open("data-v1");
+    const cache = await caches.open(DATA_CACHE_NAME);
     const response = await cache.match("/api/puzzles/all");
     if (!response) return null;
     const allPuzzles = (await response.json()) as CachedPuzzle[];

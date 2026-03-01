@@ -62,7 +62,7 @@ export default function AccountPage() {
           {user ? (
             <button
               onClick={handleSignOut}
-              className="flex w-full items-center gap-3 px-4 py-3 text-sm text-destructive hover:bg-destructive/10 transition-colors"
+              className="flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-sm text-destructive hover:bg-destructive/10 transition-colors"
             >
               <LogOut className="size-4" />
               Sign Out

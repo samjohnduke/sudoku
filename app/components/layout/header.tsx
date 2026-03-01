@@ -119,7 +119,8 @@ export function Header({ user }: HeaderProps) {
           {MOBILE_NAV_ITEMS.map((item) => {
             const isActive =
               location.pathname === item.to ||
-              (item.to === "/bible" && location.pathname.startsWith("/bible"));
+              (item.to === "/bible" && location.pathname.startsWith("/bible")) ||
+              (item.to === "/account" && ["/account", "/stats", "/settings"].includes(location.pathname));
 
             return (
               <Link

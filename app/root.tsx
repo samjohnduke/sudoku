@@ -11,6 +11,7 @@ import {
 import type { Route } from "./+types/root";
 import { getSessionUser } from "~/lib/auth/auth.server";
 import { Header } from "~/components/layout/header";
+import { PwaUpdateBanner } from "~/components/layout/pwa-update-banner";
 import "./app.css";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
@@ -74,6 +75,7 @@ export default function App() {
       <main id="main-content" className="flex flex-1 flex-col">
         <Outlet context={{ user }} />
       </main>
+      <PwaUpdateBanner />
     </div>
   );
 }

@@ -784,6 +784,29 @@ export function useGame(options: UseGameOptions) {
     };
   }, [game.current, game.notes, game.centerNotes, game.historyIndex, game.timer, game.isComplete, puzzleId]);
 
+  // -----------------------------------------------------------------------
+  // Save timer on visibility change (user leaves/backgrounds the app)
+  // -----------------------------------------------------------------------
+  const gameRef = useRef(game);
+  gameRef.current = game;
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden && !gameRef.current.isComplete) {
+        onSaveRef.current({
+          puzzleId,
+          boardState: serializeBoard(gameRef.current.current),
+          notesSnapshot: serializeNotes(gameRef.current.notes, gameRef.current.centerNotes),
+          timeSeconds: gameRef.current.timer,
+          completed: false,
+        });
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [puzzleId]);
+
   return {
     game,
     selectCell,

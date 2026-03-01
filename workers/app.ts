@@ -24,7 +24,7 @@ export default Sentry.withSentry(
   {
     async fetch(request, env, ctx) {
       const start = Date.now();
-      const response = requestHandler(request, {
+      const response = await requestHandler(request, {
         cloudflare: { env, ctx },
       });
       

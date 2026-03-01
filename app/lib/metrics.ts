@@ -141,3 +141,216 @@ export async function timedQuery<T>(
   trackDbQuery(metrics, { operation, table, durationMs: Date.now() - start });
   return result;
 }
+
+// ---------------------------------------------------------------------------
+// Metrics catalog — machine-readable schema of all tracked data
+// ---------------------------------------------------------------------------
+
+export interface MetricFieldDef {
+  /** Analytics Engine slot (e.g. "blob1", "double1"). */
+  slot: string;
+  /** Human-readable name. */
+  name: string;
+  /** What this field contains. */
+  description: string;
+}
+
+export interface MetricEventDef {
+  /** Event name used as the index value. */
+  event: string;
+  /** Human description of when this fires. */
+  description: string;
+  /** Where in the code this is emitted. */
+  source: string;
+  /** Fields populated for this event. */
+  fields: MetricFieldDef[];
+  /** Example SQL query to analyse this event. */
+  exampleQuery: string;
+}
+
+export interface MetricCategoryDef {
+  /** Category identifier. */
+  id: string;
+  /** Human-readable name. */
+  name: string;
+  /** What this category covers. */
+  description: string;
+  /** How to filter for this category in SQL. */
+  indexPattern: string;
+  /** Common field layout for all events in this category. */
+  fields: MetricFieldDef[];
+  /** Individual events within this category. */
+  events: MetricEventDef[];
+}
+
+export interface MetricsCatalog {
+  /** Analytics Engine dataset name. */
+  dataset: string;
+  /** When this catalog was generated. */
+  version: string;
+  /** Metric categories. */
+  categories: MetricCategoryDef[];
+}
+
+export const METRICS_CATALOG: MetricsCatalog = {
+  dataset: "supersudoku_metrics",
+  version: "1.0.0",
+  categories: [
+    {
+      id: "requests",
+      name: "HTTP Requests",
+      description:
+        "Automatic request-level metrics emitted for every HTTP request by the Worker entry point.",
+      indexPattern: "index1 NOT LIKE 'db:%' AND blob1 NOT IN ('login','signup','signout','new_game','game_start','game_resume','game_save','game_complete','settings_update','sync_migrate','ssr_error')",
+      fields: [
+        { slot: "blob1", name: "route", description: "URL pathname" },
+        { slot: "blob2", name: "method", description: "HTTP method (GET, POST, …)" },
+        { slot: "blob3", name: "status", description: "HTTP status code as string" },
+        { slot: "double1", name: "duration_ms", description: "Total response time in milliseconds" },
+        { slot: "double2", name: "count", description: "Always 1, for COUNT() aggregation" },
+      ],
+      events: [],
+    },
+    {
+      id: "business",
+      name: "Business Events",
+      description: "Explicit events tracking user actions and application lifecycle.",
+      indexPattern: "index1 IN ('login','signup','signout','new_game','game_start','game_resume','game_save','game_complete','settings_update','sync_migrate','ssr_error')",
+      fields: [
+        { slot: "blob1", name: "event", description: "Event name" },
+        { slot: "blob2", name: "user_id", description: "Authenticated user ID (null for anonymous)" },
+        { slot: "blob3", name: "detail", description: "Event-specific context" },
+        { slot: "double1", name: "value", description: "Event-specific numeric value (default 1)" },
+        { slot: "double2", name: "count", description: "Always 1, for COUNT() aggregation" },
+      ],
+      events: [
+        {
+          event: "login",
+          description: "User signed in successfully.",
+          source: "routes/api.auth.$.ts",
+          fields: [
+            { slot: "blob2", name: "user_id", description: "Authenticated user ID" },
+          ],
+          exampleQuery:
+            "SELECT COUNT() AS logins, toStartOfInterval(timestamp, INTERVAL '1' HOUR) AS hour FROM supersudoku_metrics WHERE index1 = 'login' AND timestamp > NOW() - INTERVAL '24' HOUR GROUP BY hour ORDER BY hour",
+        },
+        {
+          event: "signup",
+          description: "New user account created.",
+          source: "routes/api.auth.$.ts",
+          fields: [
+            { slot: "blob2", name: "user_id", description: "New user ID" },
+          ],
+          exampleQuery:
+            "SELECT COUNT() AS signups FROM supersudoku_metrics WHERE index1 = 'signup' AND timestamp > NOW() - INTERVAL '7' DAY",
+        },
+        {
+          event: "signout",
+          description: "User signed out.",
+          source: "routes/api.auth.$.ts",
+          fields: [
+            { slot: "blob2", name: "user_id", description: "User ID" },
+          ],
+          exampleQuery:
+            "SELECT COUNT() AS signouts FROM supersudoku_metrics WHERE index1 = 'signout' AND timestamp > NOW() - INTERVAL '24' HOUR",
+        },
+        {
+          event: "new_game",
+          description: "Random puzzle selected via the API (user clicked 'New Puzzle').",
+          source: "routes/api.puzzle.random.ts",
+          fields: [
+            { slot: "blob3", name: "detail", description: "Difficulty range, e.g. '30-50'" },
+          ],
+          exampleQuery:
+            "SELECT blob3 AS difficulty_range, COUNT() AS games FROM supersudoku_metrics WHERE index1 = 'new_game' AND timestamp > NOW() - INTERVAL '24' HOUR GROUP BY difficulty_range",
+        },
+        {
+          event: "game_start",
+          description: "First save for a puzzle (user started playing a new puzzle).",
+          source: "routes/api.game.save.ts",
+          fields: [
+            { slot: "blob2", name: "user_id", description: "User ID" },
+          ],
+          exampleQuery:
+            "SELECT COUNT() AS starts FROM supersudoku_metrics WHERE index1 = 'game_start' AND timestamp > NOW() - INTERVAL '7' DAY",
+        },
+        {
+          event: "game_resume",
+          description: "User loaded a puzzle with existing in-progress save data.",
+          source: "routes/play.$puzzleId.tsx",
+          fields: [
+            { slot: "blob2", name: "user_id", description: "User ID" },
+            { slot: "blob3", name: "detail", description: "Difficulty label" },
+          ],
+          exampleQuery:
+            "SELECT blob3 AS difficulty, COUNT() AS resumes FROM supersudoku_metrics WHERE index1 = 'game_resume' AND timestamp > NOW() - INTERVAL '7' DAY GROUP BY difficulty",
+        },
+        {
+          event: "game_save",
+          description: "Game progress saved (auto-save or manual).",
+          source: "routes/api.game.save.ts",
+          fields: [
+            { slot: "blob2", name: "user_id", description: "User ID" },
+          ],
+          exampleQuery:
+            "SELECT COUNT() AS saves, toStartOfInterval(timestamp, INTERVAL '1' HOUR) AS hour FROM supersudoku_metrics WHERE index1 = 'game_save' AND timestamp > NOW() - INTERVAL '24' HOUR GROUP BY hour ORDER BY hour",
+        },
+        {
+          event: "game_complete",
+          description: "User solved a puzzle.",
+          source: "routes/api.game.save.ts",
+          fields: [
+            { slot: "blob2", name: "user_id", description: "User ID" },
+            { slot: "double1", name: "value", description: "Completion time in seconds" },
+          ],
+          exampleQuery:
+            "SELECT COUNT() AS completions, AVG(double1) AS avg_time_sec, MIN(double1) AS best_time_sec FROM supersudoku_metrics WHERE index1 = 'game_complete' AND timestamp > NOW() - INTERVAL '7' DAY",
+        },
+        {
+          event: "settings_update",
+          description: "User changed their settings.",
+          source: "routes/api.settings.ts",
+          fields: [
+            { slot: "blob2", name: "user_id", description: "User ID" },
+          ],
+          exampleQuery:
+            "SELECT COUNT() AS updates FROM supersudoku_metrics WHERE index1 = 'settings_update' AND timestamp > NOW() - INTERVAL '7' DAY",
+        },
+        {
+          event: "sync_migrate",
+          description: "Local data migrated to server after sign-in.",
+          source: "routes/api.sync.migrate.ts",
+          fields: [
+            { slot: "blob2", name: "user_id", description: "User ID" },
+          ],
+          exampleQuery:
+            "SELECT COUNT() AS migrations FROM supersudoku_metrics WHERE index1 = 'sync_migrate' AND timestamp > NOW() - INTERVAL '30' DAY",
+        },
+        {
+          event: "ssr_error",
+          description: "Server-side rendering error during streaming.",
+          source: "entry.server.tsx",
+          fields: [
+            { slot: "blob3", name: "detail", description: "Error message (truncated to 200 chars)" },
+          ],
+          exampleQuery:
+            "SELECT blob3 AS error_message, COUNT() AS occurrences FROM supersudoku_metrics WHERE index1 = 'ssr_error' AND timestamp > NOW() - INTERVAL '24' HOUR GROUP BY error_message ORDER BY occurrences DESC",
+        },
+      ],
+    },
+    {
+      id: "db_queries",
+      name: "Database Queries",
+      description: "Per-query timing for D1 database operations, tracked via the timedQuery() wrapper.",
+      indexPattern: "index1 LIKE 'db:%'",
+      fields: [
+        { slot: "blob1", name: "type", description: "Always 'db_query'" },
+        { slot: "blob2", name: "operation", description: "SQL operation: select, insert, update, session" },
+        { slot: "blob3", name: "table", description: "Table name: puzzles, user_stats, user_settings, session" },
+        { slot: "double1", name: "duration_ms", description: "Query execution time in milliseconds" },
+        { slot: "double2", name: "count", description: "Always 1, for COUNT() aggregation" },
+      ],
+      events: [],
+    },
+  ],
+};

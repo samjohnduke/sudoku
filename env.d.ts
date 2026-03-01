@@ -8,6 +8,6 @@ interface Env {
   CLOUDFLARE_ACCOUNT_ID?: string;
   /** API token with "Account Analytics: Read" – required for /api/metrics. */
   CLOUDFLARE_ANALYTICS_TOKEN?: string;
-  /** Shared secret for Bearer auth on /api/metrics. Optional if session auth suffices. */
+  /** Shared HMAC secret for /api/metrics request signing. Optional if session auth suffices. */
   METRICS_API_KEY?: string;
 }

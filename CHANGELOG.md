@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
+- Use solution-validated board for hint computation by @samjohnduke ([e37610b](https://github.com/samjohnduke/sudoku/commit/e37610bd7ab1cd84e09c8833a8dd58ef8e8cf4e2))
+
 - Resolve TypeScript errors in offline cache access by @samjohnduke ([5233699](https://github.com/samjohnduke/sudoku/commit/5233699a4bf6abb54643ee642dd74fdd1fd1d0fb))
 
 - Repair auth system — D1 compatibility, cookie security, error handling by @samjohnduke ([35fa2df](https://github.com/samjohnduke/sudoku/commit/35fa2df3ff5a4aa27324e619ddb0cac73542eef3))
@@ -20,6 +22,8 @@ All notable changes to this project will be documented in this file.
 
 
 ### Documentation
+
+- Update changelog [skip ci] by @github-actions[bot] ([120b8f3](https://github.com/samjohnduke/sudoku/commit/120b8f373474364212777615407d21925d24ef5a))
 
 - Add TODO.md with application review findings by @samjohnduke ([1da8501](https://github.com/samjohnduke/sudoku/commit/1da85014f3b89953f92cdd73810c1a78b0d43e9c))
 

@@ -101,7 +101,7 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
 const LOCAL_SAVE_PREFIX = "super_sudoku_progress_";
 
 /** Read a localStorage save entry, if it exists and is valid. */
-function getLocalProgress(puzzleId: string) {
+export function getLocalProgress(puzzleId: string) {
   try {
     const raw = localStorage.getItem(LOCAL_SAVE_PREFIX + puzzleId);
     if (!raw) return null;
@@ -117,35 +117,46 @@ function getLocalProgress(puzzleId: string) {
   }
 }
 
+type Progress = { boardState: string; notes: string; timeSeconds: number; updatedAt?: string | null };
+type LocalProgress = { boardState: string; notes: string; timeSeconds: number; savedAt: string | null };
+
+/**
+ * Pick the best progress from server vs localStorage.
+ * Returns the merged progress (may be server, local, or null).
+ */
+export function mergeProgress(
+  serverProgress: Progress | null,
+  localProgress: LocalProgress | null,
+): Progress | null {
+  if (localProgress?.savedAt && serverProgress) {
+    const serverUpdated = serverProgress.updatedAt;
+    if (!serverUpdated || localProgress.savedAt > serverUpdated) {
+      return {
+        boardState: localProgress.boardState,
+        notes: localProgress.notes,
+        timeSeconds: localProgress.timeSeconds,
+        updatedAt: localProgress.savedAt,
+      };
+    }
+    return serverProgress;
+  }
+  if (localProgress && !serverProgress) {
+    return {
+      boardState: localProgress.boardState,
+      notes: localProgress.notes,
+      timeSeconds: localProgress.timeSeconds,
+      updatedAt: localProgress.savedAt,
+    };
+  }
+  return serverProgress;
+}
+
 export async function clientLoader({ params, serverLoader }: ClientLoaderFunctionArgs) {
   const puzzleId = params.puzzleId!;
 
   try {
     const data = await serverLoader<typeof loader>();
-
-    // When online: check if localStorage has newer offline progress
-    const local = getLocalProgress(puzzleId);
-    if (local?.savedAt && data.progress) {
-      const serverUpdated = data.progress.updatedAt;
-      // Local save is newer than server — use it instead
-      if (!serverUpdated || local.savedAt > serverUpdated) {
-        data.progress = {
-          boardState: local.boardState,
-          notes: local.notes,
-          timeSeconds: local.timeSeconds,
-          updatedAt: local.savedAt,
-        };
-      }
-    } else if (local && !data.progress) {
-      // Server has no progress at all — use local
-      data.progress = {
-        boardState: local.boardState,
-        notes: local.notes,
-        timeSeconds: local.timeSeconds,
-        updatedAt: local.savedAt,
-      };
-    }
-
+    data.progress = mergeProgress(data.progress, getLocalProgress(puzzleId));
     return data;
   } catch {
     // Offline — load puzzle from SW cache, progress from localStorage

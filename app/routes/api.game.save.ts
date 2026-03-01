@@ -5,7 +5,7 @@ import { eq, and } from "drizzle-orm";
 import { apiError, apiSuccess } from "~/lib/api";
 import { getSessionUser } from "~/lib/auth/auth.server";
 
-interface SaveGameBody {
+export interface SaveGameBody {
   puzzleId: string;
   boardState: string;
   notesSnapshot: string;
@@ -16,7 +16,7 @@ interface SaveGameBody {
   savedAt?: string;
 }
 
-function validateSaveBody(data: unknown): data is SaveGameBody {
+export function validateSaveBody(data: unknown): data is SaveGameBody {
   if (typeof data !== "object" || data === null) return false;
   const obj = data as Record<string, unknown>;
   if (
@@ -35,6 +35,23 @@ function validateSaveBody(data: unknown): data is SaveGameBody {
     return false;
   }
   return true;
+}
+
+/**
+ * Determines whether an offline sync save should be skipped.
+ * Returns true if the existing server record is newer or the save would
+ * un-complete a finished puzzle.
+ */
+export function shouldSkipSave(
+  body: SaveGameBody,
+  existing: { completedAt: string | null; updatedAt: string | null },
+): boolean {
+  if (!body.savedAt) return false;
+  // Never overwrite a completed puzzle with in-progress data
+  if (existing.completedAt && !body.completed) return true;
+  // Skip if server has a newer update
+  if (existing.updatedAt && body.savedAt <= existing.updatedAt) return true;
+  return false;
 }
 
 export async function action({ request, context }: ActionFunctionArgs) {
@@ -74,16 +91,8 @@ export async function action({ request, context }: ActionFunctionArgs) {
     .get();
 
   if (existing) {
-    // ── Conflict resolution for offline syncs ──
-    if (body.savedAt) {
-      // Never overwrite a completed puzzle with in-progress data
-      if (existing.completedAt && !body.completed) {
-        return apiSuccess({ skipped: true });
-      }
-      // Skip if server has a newer update
-      if (existing.updatedAt && body.savedAt <= existing.updatedAt) {
-        return apiSuccess({ skipped: true });
-      }
+    if (shouldSkipSave(body, existing)) {
+      return apiSuccess({ skipped: true });
     }
 
     await db

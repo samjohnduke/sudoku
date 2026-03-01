@@ -713,6 +713,25 @@ export function useGame(options: UseGameOptions) {
   }, [enterNumber, deleteValue, undo, redo, deselect, game.selectedCell]);
 
   // -----------------------------------------------------------------------
+  // Save on mount for new games (no resume state)
+  // -----------------------------------------------------------------------
+  const didInitialSave = useRef(false);
+  useEffect(() => {
+    if (didInitialSave.current) return;
+    didInitialSave.current = true;
+    if (!options.resumeState) {
+      onSaveRef.current({
+        puzzleId,
+        boardState: serializeBoard(game.current),
+        notesSnapshot: serializeNotes(game.notes, game.centerNotes),
+        timeSeconds: game.timer,
+        completed: game.isComplete,
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // -----------------------------------------------------------------------
   // Debounced save — fire after any state change
   // -----------------------------------------------------------------------
   const prevStateRef = useRef<{

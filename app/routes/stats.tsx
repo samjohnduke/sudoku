@@ -392,7 +392,7 @@ export default function StatsPage({ loaderData }: Route.ComponentProps) {
   }
 
   return (
-    <div className="max-w-xl mx-auto px-5 py-8 pb-20 sm:pb-8 space-y-8">
+    <div className="max-w-2xl mx-auto px-5 py-8 pb-20 sm:pb-8 space-y-8">
         <div>
           <h1 className="text-3xl font-bold tracking-tight font-serif">Your Stats</h1>
           <p className="text-muted-foreground mt-1">
@@ -541,7 +541,7 @@ function AnonymousStatsView() {
   const localStats = useLocalStats();
 
   return (
-    <div className="max-w-xl mx-auto px-5 py-8 pb-20 sm:pb-8 space-y-8">
+    <div className="max-w-2xl mx-auto px-5 py-8 pb-20 sm:pb-8 space-y-8">
         <div>
           <h1 className="text-3xl font-bold tracking-tight font-serif">Your Stats</h1>
           <p className="text-muted-foreground mt-1">

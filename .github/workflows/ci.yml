@@ -48,6 +48,9 @@ jobs:
 
       - run: npm ci
 
+      - name: Build
+        run: npx react-router build
+
       - name: Deploy to Cloudflare Workers
         run: npx wrangler deploy
         env:

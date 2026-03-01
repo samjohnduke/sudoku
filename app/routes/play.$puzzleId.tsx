@@ -1,7 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import { useCallback, useEffect, useState } from "react";
 import type { LoaderFunctionArgs } from "react-router";
-import { Link, useLoaderData, useParams } from "react-router";
+import { Link, useLoaderData, useNavigate, useParams } from "react-router";
 import { Board } from "~/components/sudoku/board";
 import { NumberPad, type InputMode as PadInputMode } from "~/components/sudoku/number-pad";
 import type { GameSettings } from "~/components/sudoku/types";
@@ -19,9 +19,9 @@ import { getDb } from "~/db";
 import { puzzles, userStats } from "~/db/schema";
 import type { InputMode as GameInputMode } from "~/hooks/use-game";
 import { useGame, type SavePayload } from "~/hooks/use-game";
-import { createAuth } from "~/lib/auth/auth.server";
+import { getSessionUser } from "~/lib/auth/auth.server";
 import { getHint } from "~/lib/hints";
-import { cn } from "~/lib/utils";
+import { cn, formatTime, DIFFICULTY_RANGES } from "~/lib/utils";
 import type { SolveStep, Technique } from "../../lib/sudoku/types";
 
 // ---------------------------------------------------------------------------
@@ -63,33 +63,25 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
   if (!puzzle) throw new Response("Puzzle not found", { status: 404 });
 
   let progress = null;
-  try {
-    const auth = createAuth(cloudflare.env.DB, {
-      BETTER_AUTH_SECRET: cloudflare.env.BETTER_AUTH_SECRET,
-      BETTER_AUTH_URL: cloudflare.env.BETTER_AUTH_URL,
-    });
-    const session = await auth.api.getSession({ headers: request.headers });
-    if (session?.user) {
-      const existing = await db
-        .select()
-        .from(userStats)
-        .where(
-          and(
-            eq(userStats.userId, session.user.id),
-            eq(userStats.puzzleId, params.puzzleId!),
-          ),
-        )
-        .get();
-      if (existing && !existing.completedAt) {
-        progress = {
-          boardState: existing.boardState ?? "",
-          notes: existing.notesSnapshot ?? "{}",
-          timeSeconds: existing.timeSeconds ?? 0,
-        };
-      }
+  const user = await getSessionUser(request, cloudflare.env);
+  if (user) {
+    const existing = await db
+      .select()
+      .from(userStats)
+      .where(
+        and(
+          eq(userStats.userId, user.id),
+          eq(userStats.puzzleId, params.puzzleId!),
+        ),
+      )
+      .get();
+    if (existing && !existing.completedAt) {
+      progress = {
+        boardState: existing.boardState ?? "",
+        notes: existing.notesSnapshot ?? "{}",
+        timeSeconds: existing.timeSeconds ?? 0,
+      };
     }
-  } catch {
-    /* not signed in or auth error — fine */
   }
 
   return {
@@ -114,12 +106,6 @@ function parsePuzzleString(s: string): number[] {
     const n = Number(ch);
     return Number.isNaN(n) || ch === "." ? 0 : n;
   });
-}
-
-function formatTime(seconds: number): string {
-  const m = Math.floor(seconds / 60);
-  const s = seconds % 60;
-  return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
 const SETTINGS_KEY = "super_sudoku_settings";
@@ -167,6 +153,7 @@ interface GameViewProps {
 }
 
 function GameView({ puzzle, progress }: GameViewProps) {
+  const navigate = useNavigate();
   const [settings] = useState<GameSettings>(loadSettings);
 
   const initial = parsePuzzleString(puzzle.puzzle);
@@ -194,6 +181,26 @@ function GameView({ puzzle, progress }: GameViewProps) {
     [],
   );
 
+  // Resolve resume state: prefer server progress, fall back to localStorage
+  const [resumeState] = useState(() => {
+    if (progress) return progress;
+    if (typeof window === "undefined") return null;
+    try {
+      const raw = localStorage.getItem(LOCAL_SAVE_PREFIX + puzzle.id);
+      if (raw) {
+        const saved = JSON.parse(raw) as SavePayload;
+        return {
+          boardState: saved.boardState,
+          notes: saved.notesSnapshot,
+          timeSeconds: saved.timeSeconds,
+        };
+      }
+    } catch {
+      // ignore bad data
+    }
+    return null;
+  });
+
   const {
     game,
     selectCell,
@@ -201,6 +208,7 @@ function GameView({ puzzle, progress }: GameViewProps) {
     deleteValue,
     undo,
     redo,
+    reset,
     mode,
     setMode,
   } = useGame({
@@ -211,7 +219,7 @@ function GameView({ puzzle, progress }: GameViewProps) {
     difficultyLabel: puzzle.difficultyLabel,
     settings,
     onSave: handleSave,
-    resumeState: progress,
+    resumeState,
   });
 
   // --- Hint state ---
@@ -236,20 +244,6 @@ function GameView({ puzzle, progress }: GameViewProps) {
     setHint(null);
     setHintCells([]);
   }, [boardKey]);
-
-  // Also try to load localStorage progress on first mount if no server progress
-  useEffect(() => {
-    if (progress) return;
-    try {
-      const raw = localStorage.getItem(LOCAL_SAVE_PREFIX + puzzle.id);
-      if (raw) {
-        // We can't retroactively feed this into useGame after init,
-        // so we just leave it for now — the hook will overwrite on first change.
-      }
-    } catch {
-      // ignore
-    }
-  }, [progress, puzzle.id]);
 
   const padMode = gameModeTopadMode(mode);
 
@@ -300,6 +294,29 @@ function GameView({ puzzle, progress }: GameViewProps) {
             <CardFooter className="gap-2">
               <Button asChild variant="outline" className="flex-1 rounded-xl">
                 <Link to="/">Home</Link>
+              </Button>
+              <Button
+                className="flex-1 rounded-xl"
+                onClick={async () => {
+                  const range = DIFFICULTY_RANGES[puzzle.difficultyLabel];
+                  if (!range) {
+                    navigate("/");
+                    return;
+                  }
+                  try {
+                    const res = await fetch(`/api/puzzle/random?min=${range[0]}&max=${range[1]}`);
+                    if (res.ok) {
+                      const data = (await res.json()) as { puzzleId: string };
+                      navigate(`/play/${data.puzzleId}`);
+                      return;
+                    }
+                  } catch {
+                    // fall through to home
+                  }
+                  navigate("/");
+                }}
+              >
+                New Puzzle
               </Button>
             </CardFooter>
           </Card>
@@ -352,6 +369,18 @@ function GameView({ puzzle, progress }: GameViewProps) {
               onUndo={undo}
               onRedo={redo}
             />
+
+            {/* Reset button */}
+            <button
+              onClick={() => {
+                if (window.confirm("Reset this puzzle? All progress will be lost.")) {
+                  reset();
+                }
+              }}
+              className="self-center text-xs text-muted-foreground hover:text-foreground transition-colors py-1"
+            >
+              Reset puzzle
+            </button>
           </div>
         ) : null}
       </main>

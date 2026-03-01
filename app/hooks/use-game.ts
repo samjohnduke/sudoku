@@ -129,7 +129,8 @@ type Action =
   | { type: "UNDO" }
   | { type: "REDO" }
   | { type: "TICK" }
-  | { type: "SET_TIMER"; seconds: number };
+  | { type: "SET_TIMER"; seconds: number }
+  | { type: "RESET"; initial: number[] };
 
 // ---------------------------------------------------------------------------
 // Build initial state
@@ -294,6 +295,10 @@ function gameReducer(state: GameState, action: Action): GameState {
           newNotes.delete(idx);
         }
 
+        // Clear center notes for this cell when setting corner notes
+        const newCenterNotes = cloneNotesMap(state.centerNotes);
+        newCenterNotes.delete(idx);
+
         const entry: HistoryEntry = {
           cellIndex: idx,
           prevValue: state.current[idx],
@@ -307,6 +312,7 @@ function gameReducer(state: GameState, action: Action): GameState {
         return {
           ...state,
           notes: newNotes,
+          centerNotes: newCenterNotes,
           history: newHistory,
           historyIndex: newHistory.length - 1,
         };
@@ -333,6 +339,10 @@ function gameReducer(state: GameState, action: Action): GameState {
           newCenterNotes.delete(idx);
         }
 
+        // Clear corner notes for this cell when setting center notes
+        const newNotes = cloneNotesMap(state.notes);
+        newNotes.delete(idx);
+
         const entry: HistoryEntry = {
           cellIndex: idx,
           prevValue: state.current[idx],
@@ -345,6 +355,7 @@ function gameReducer(state: GameState, action: Action): GameState {
         const newHistory = [...baseHistory, entry];
         return {
           ...state,
+          notes: newNotes,
           centerNotes: newCenterNotes,
           history: newHistory,
           historyIndex: newHistory.length - 1,
@@ -489,6 +500,20 @@ function gameReducer(state: GameState, action: Action): GameState {
       };
     }
 
+    case "RESET": {
+      return {
+        ...state,
+        current: [...action.initial],
+        notes: new Map(),
+        centerNotes: new Map(),
+        selectedCell: null,
+        history: [],
+        historyIndex: -1,
+        timer: 0,
+        isComplete: false,
+      };
+    }
+
     default:
       return state;
   }
@@ -572,6 +597,10 @@ export function useGame(options: UseGameOptions) {
   const redo = useCallback(() => {
     dispatch({ type: "REDO" });
   }, []);
+
+  const reset = useCallback(() => {
+    dispatch({ type: "RESET", initial: options.initial });
+  }, [options.initial]);
 
   // -----------------------------------------------------------------------
   // Timer
@@ -743,6 +772,7 @@ export function useGame(options: UseGameOptions) {
     deleteValue,
     undo,
     redo,
+    reset,
     mode,
     setMode,
   };

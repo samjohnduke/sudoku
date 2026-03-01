@@ -2,6 +2,7 @@ import type { LoaderFunctionArgs } from "react-router";
 import { getDb } from "~/db";
 import { puzzles } from "~/db/schema";
 import { and, gte, lte, sql } from "drizzle-orm";
+import { apiError } from "~/lib/api";
 
 export async function loader({ request, context }: LoaderFunctionArgs) {
   const { cloudflare } = context as { cloudflare: { env: Env } };
@@ -24,7 +25,7 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
     .get();
 
   if (!puzzle) {
-    return Response.json({ error: "No puzzles in range" }, { status: 404 });
+    return apiError("No puzzles in range", 404);
   }
 
   return Response.json({ puzzleId: puzzle.id });

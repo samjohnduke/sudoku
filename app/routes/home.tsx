@@ -6,19 +6,9 @@ import { Logo } from "~/components/logo";
 import { Button } from "~/components/ui/button";
 import { getDb } from "~/db";
 import { puzzles, userStats } from "~/db/schema";
-import { createAuth } from "~/lib/auth/auth.server";
-import { cn } from "~/lib/utils";
+import { getSessionUser } from "~/lib/auth/auth.server";
+import { cn, formatTime, DIFFICULTIES, DIFFICULTY_RANGES } from "~/lib/utils";
 import type { Route } from "./+types/home";
-
-const DIFFICULTIES = ["Beginner", "Easy", "Medium", "Hard", "Expert"] as const;
-
-const DIFFICULTY_RANGES: Record<string, [number, number]> = {
-  Beginner: [0, 15],
-  Easy: [15, 35],
-  Medium: [35, 60],
-  Hard: [60, 80],
-  Expert: [80, 100],
-};
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -45,43 +35,29 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
   // Check for in-progress game if signed in
   let inProgress: { puzzleId: string; difficultyLabel: string; timeSeconds: number | null } | null = null;
-  try {
-    const auth = createAuth(cloudflare.env.DB, {
-      BETTER_AUTH_SECRET: cloudflare.env.BETTER_AUTH_SECRET,
-      BETTER_AUTH_URL: cloudflare.env.BETTER_AUTH_URL,
-    });
-    const session = await auth.api.getSession({ headers: request.headers });
-    if (session?.user) {
-      const row = await db
-        .select({
-          puzzleId: userStats.puzzleId,
-          difficultyLabel: puzzles.difficultyLabel,
-          timeSeconds: userStats.timeSeconds,
-        })
-        .from(userStats)
-        .innerJoin(puzzles, eq(userStats.puzzleId, puzzles.id))
-        .where(
-          and(
-            eq(userStats.userId, session.user.id),
-            isNull(userStats.completedAt),
-          ),
-        )
-        .orderBy(desc(userStats.startedAt))
-        .limit(1)
-        .get();
-      if (row) inProgress = row;
-    }
-  } catch {
-    // Not signed in — fine
+  const user = await getSessionUser(request, cloudflare.env);
+  if (user) {
+    const row = await db
+      .select({
+        puzzleId: userStats.puzzleId,
+        difficultyLabel: puzzles.difficultyLabel,
+        timeSeconds: userStats.timeSeconds,
+      })
+      .from(userStats)
+      .innerJoin(puzzles, eq(userStats.puzzleId, puzzles.id))
+      .where(
+        and(
+          eq(userStats.userId, user.id),
+          isNull(userStats.completedAt),
+        ),
+      )
+      .orderBy(desc(userStats.startedAt))
+      .limit(1)
+      .get();
+    if (row) inProgress = row;
   }
 
   return { counts, inProgress };
-}
-
-function formatTime(seconds: number): string {
-  const m = Math.floor(seconds / 60);
-  const s = seconds % 60;
-  return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
 interface CachedPuzzle {

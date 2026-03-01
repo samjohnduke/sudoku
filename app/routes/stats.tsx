@@ -1,5 +1,5 @@
 import { and, desc, eq, isNotNull, isNull } from "drizzle-orm";
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { Link, useOutletContext } from "react-router";
 import { Button } from "~/components/ui/button";
 import {
@@ -10,7 +10,8 @@ import {
 } from "~/components/ui/card";
 import { getDb } from "~/db";
 import { puzzles, userStats } from "~/db/schema";
-import { createAuth } from "~/lib/auth/auth.server";
+import { getSessionUser } from "~/lib/auth/auth.server";
+import { formatTime } from "~/lib/utils";
 import type { Route } from "./+types/stats";
 
 // ── Types ──
@@ -41,12 +42,6 @@ interface StatsData {
 
 // ── Helpers ──
 
-function formatTime(seconds: number): string {
-  const m = Math.floor(seconds / 60);
-  const s = seconds % 60;
-  return `${m}:${s.toString().padStart(2, "0")}`;
-}
-
 const DIFFICULTY_ORDER = ["Beginner", "Easy", "Medium", "Hard", "Expert"];
 
 const DIFFICULTY_COLORS: Record<string, string> = {
@@ -66,16 +61,12 @@ export function meta() {
 export async function loader({ request, context }: Route.LoaderArgs) {
   const { cloudflare } = context as { cloudflare: { env: Env } };
 
-  try {
-    const auth = createAuth(cloudflare.env.DB, {
-      BETTER_AUTH_SECRET: cloudflare.env.BETTER_AUTH_SECRET,
-      BETTER_AUTH_URL: cloudflare.env.BETTER_AUTH_URL,
-    });
-    const session = await auth.api.getSession({ headers: request.headers });
-    if (!session?.user) {
-      return { stats: null, signedIn: false };
-    }
+  const user = await getSessionUser(request, cloudflare.env);
+  if (!user) {
+    return { stats: null, signedIn: false };
+  }
 
+  try {
     const db = getDb(cloudflare.env.DB);
 
     // Completed games with difficulty labels
@@ -90,7 +81,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       .innerJoin(puzzles, eq(userStats.puzzleId, puzzles.id))
       .where(
         and(
-          eq(userStats.userId, session.user.id),
+          eq(userStats.userId, user.id),
           isNotNull(userStats.completedAt),
         ),
       )
@@ -109,7 +100,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       .innerJoin(puzzles, eq(userStats.puzzleId, puzzles.id))
       .where(
         and(
-          eq(userStats.userId, session.user.id),
+          eq(userStats.userId, user.id),
           isNull(userStats.completedAt),
         ),
       )
@@ -165,7 +156,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
 // ── SVG Charts ──
 
-function TimeTrendChart({ games }: { games: CompletedGame[] }) {
+const TimeTrendChart = memo(function TimeTrendChart({ games }: { games: CompletedGame[] }) {
   if (games.length < 2) {
     return (
       <p className="text-sm text-muted-foreground py-4">
@@ -273,9 +264,9 @@ function TimeTrendChart({ games }: { games: CompletedGame[] }) {
       })}
     </svg>
   );
-}
+});
 
-function DifficultyChart({
+const DifficultyChart = memo(function DifficultyChart({
   distribution,
 }: {
   distribution: Record<string, number>;
@@ -347,7 +338,7 @@ function DifficultyChart({
       })}
     </svg>
   );
-}
+});
 
 // ── Local Stats (anonymous) ──
 

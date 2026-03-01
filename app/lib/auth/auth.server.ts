@@ -39,6 +39,28 @@ function wrapD1(db: D1Database): D1Database {
   });
 }
 
+/**
+ * Helper to get the current session user from a request.
+ * Returns the user object or null if not signed in.
+ */
+export async function getSessionUser(
+  request: Request,
+  env: Env,
+): Promise<{ id: string; name: string | null } | null> {
+  try {
+    const auth = createAuth(env.DB, {
+      BETTER_AUTH_SECRET: env.BETTER_AUTH_SECRET,
+      BETTER_AUTH_URL: env.BETTER_AUTH_URL,
+    });
+    const session = await auth.api.getSession({ headers: request.headers });
+    return session?.user
+      ? { id: session.user.id, name: session.user.name }
+      : null;
+  } catch {
+    return null;
+  }
+}
+
 export function createAuth(
   db: D1Database,
   env: { BETTER_AUTH_SECRET: string; BETTER_AUTH_URL: string }

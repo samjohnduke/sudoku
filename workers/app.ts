@@ -1,4 +1,5 @@
 import { createRequestHandler } from "react-router";
+import { getMetrics, trackRequest } from "~/lib/metrics";
 
 declare module "react-router" {
   export interface AppLoadContext {
@@ -16,8 +17,22 @@ const requestHandler = createRequestHandler(
 
 export default {
   async fetch(request, env, ctx) {
-    return requestHandler(request, {
+    const start = Date.now();
+    const response = await requestHandler(request, {
       cloudflare: { env, ctx },
     });
+
+    const metrics = getMetrics(env);
+    if (metrics) {
+      const url = new URL(request.url);
+      trackRequest(metrics, {
+        route: url.pathname,
+        method: request.method,
+        status: response.status,
+        durationMs: Date.now() - start,
+      });
+    }
+
+    return response;
   },
 } satisfies ExportedHandler<Env>;

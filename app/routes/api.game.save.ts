@@ -4,6 +4,7 @@ import { userStats } from "~/db/schema";
 import { eq, and } from "drizzle-orm";
 import { apiError, apiSuccess } from "~/lib/api";
 import { getSessionUser } from "~/lib/auth/auth.server";
+import { getMetrics, trackEvent, timedQuery } from "~/lib/metrics";
 
 export interface SaveGameBody {
   puzzleId: string;
@@ -57,6 +58,7 @@ export function shouldSkipSave(
 export async function action({ request, context }: ActionFunctionArgs) {
   const { cloudflare } = context as { cloudflare: { env: Env } };
   const db = getDb(cloudflare.env.DB);
+  const metrics = getMetrics(cloudflare.env);
 
   const user = await getSessionUser(request, cloudflare.env);
   if (!user) {
@@ -79,43 +81,57 @@ export async function action({ request, context }: ActionFunctionArgs) {
 
   const now = new Date().toISOString();
 
-  const existing = await db
-    .select()
-    .from(userStats)
-    .where(
-      and(
-        eq(userStats.userId, user.id),
-        eq(userStats.puzzleId, body.puzzleId),
-      ),
-    )
-    .get();
+  const existing = await timedQuery(metrics, "select", "user_stats", () =>
+    db
+      .select()
+      .from(userStats)
+      .where(
+        and(
+          eq(userStats.userId, user.id),
+          eq(userStats.puzzleId, body.puzzleId),
+        ),
+      )
+      .get(),
+  );
 
   if (existing) {
     if (shouldSkipSave(body, existing)) {
       return apiSuccess({ skipped: true });
     }
 
-    await db
-      .update(userStats)
-      .set({
+    await timedQuery(metrics, "update", "user_stats", () =>
+      db
+        .update(userStats)
+        .set({
+          boardState: body.boardState,
+          notesSnapshot: body.notesSnapshot,
+          timeSeconds: body.timeSeconds,
+          completedAt: body.completed ? new Date().toISOString() : null,
+          updatedAt: now,
+        })
+        .where(eq(userStats.id, existing.id)),
+    );
+  } else {
+    await timedQuery(metrics, "insert", "user_stats", () =>
+      db.insert(userStats).values({
+        id: crypto.randomUUID(),
+        userId: user.id,
+        puzzleId: body.puzzleId,
+        startedAt: now,
         boardState: body.boardState,
         notesSnapshot: body.notesSnapshot,
         timeSeconds: body.timeSeconds,
         completedAt: body.completed ? new Date().toISOString() : null,
         updatedAt: now,
-      })
-      .where(eq(userStats.id, existing.id));
-  } else {
-    await db.insert(userStats).values({
-      id: crypto.randomUUID(),
+      }),
+    );
+  }
+
+  trackEvent(metrics, "game_save", { userId: user.id });
+  if (body.completed) {
+    trackEvent(metrics, "game_complete", {
       userId: user.id,
-      puzzleId: body.puzzleId,
-      startedAt: now,
-      boardState: body.boardState,
-      notesSnapshot: body.notesSnapshot,
-      timeSeconds: body.timeSeconds,
-      completedAt: body.completed ? new Date().toISOString() : null,
-      updatedAt: now,
+      value: body.timeSeconds,
     });
   }
 

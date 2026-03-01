@@ -47,6 +47,8 @@ All notable changes to this project will be documented in this file.
 
 ### Documentation
 
+- Update changelog [skip ci] by @github-actions[bot] ([f1887f7](https://github.com/samjohnduke/sudoku/commit/f1887f726dbb0aa0eec09325bec736adb479690c))
+
 - Update changelog [skip ci] by @github-actions[bot] ([2b03e0c](https://github.com/samjohnduke/sudoku/commit/2b03e0cf747dd86514a47f773fa32a4307960512))
 
 - Update changelog [skip ci] by @github-actions[bot] ([833f84f](https://github.com/samjohnduke/sudoku/commit/833f84f788257c0e8e2df41af1ca8f847149cb80))
@@ -77,6 +79,8 @@ All notable changes to this project will be documented in this file.
 
 
 ### Features
+
+- Add Sentry error logging for client and server (#4) by @samjohnduke in [#4](https://github.com/samjohnduke/sudoku/pull/4) ([20759e0](https://github.com/samjohnduke/sudoku/commit/20759e05aef72f54633d3789e733156c5ccfe71f))
 
 - Add account page route for mobile user menu by @samjohnduke ([623906f](https://github.com/samjohnduke/sudoku/commit/623906f136a4a26f5b8b43f64ffbc29f18726393))
 

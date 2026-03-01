@@ -80,6 +80,7 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
         boardState: existing.boardState ?? "",
         notes: existing.notesSnapshot ?? "{}",
         timeSeconds: existing.timeSeconds ?? 0,
+        updatedAt: existing.updatedAt ?? null,
       };
     }
   }
@@ -99,12 +100,55 @@ export async function loader({ params, request, context }: LoaderFunctionArgs) {
 
 const LOCAL_SAVE_PREFIX = "super_sudoku_progress_";
 
-export async function clientLoader({ params, serverLoader }: ClientLoaderFunctionArgs) {
+/** Read a localStorage save entry, if it exists and is valid. */
+function getLocalProgress(puzzleId: string) {
   try {
-    return await serverLoader<typeof loader>();
+    const raw = localStorage.getItem(LOCAL_SAVE_PREFIX + puzzleId);
+    if (!raw) return null;
+    const saved = JSON.parse(raw) as SavePayload & { savedAt?: string };
+    return {
+      boardState: saved.boardState,
+      notes: saved.notesSnapshot,
+      timeSeconds: saved.timeSeconds,
+      savedAt: saved.savedAt ?? null,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function clientLoader({ params, serverLoader }: ClientLoaderFunctionArgs) {
+  const puzzleId = params.puzzleId!;
+
+  try {
+    const data = await serverLoader<typeof loader>();
+
+    // When online: check if localStorage has newer offline progress
+    const local = getLocalProgress(puzzleId);
+    if (local?.savedAt && data.progress) {
+      const serverUpdated = data.progress.updatedAt;
+      // Local save is newer than server — use it instead
+      if (!serverUpdated || local.savedAt > serverUpdated) {
+        data.progress = {
+          boardState: local.boardState,
+          notes: local.notes,
+          timeSeconds: local.timeSeconds,
+          updatedAt: local.savedAt,
+        };
+      }
+    } else if (local && !data.progress) {
+      // Server has no progress at all — use local
+      data.progress = {
+        boardState: local.boardState,
+        notes: local.notes,
+        timeSeconds: local.timeSeconds,
+        updatedAt: local.savedAt,
+      };
+    }
+
+    return data;
   } catch {
     // Offline — load puzzle from SW cache, progress from localStorage
-    const puzzleId = params.puzzleId!;
     const cache = await caches.open(DATA_CACHE_NAME);
     const response = await cache.match("/api/puzzles/all");
     if (!response) throw new Response("Puzzle not available offline", { status: 404 });
@@ -113,21 +157,10 @@ export async function clientLoader({ params, serverLoader }: ClientLoaderFunctio
     const puzzle = allPuzzles.find((p) => p.id === puzzleId);
     if (!puzzle) throw new Response("Puzzle not found in cache", { status: 404 });
 
-    // Try to restore progress from localStorage
-    let progress = null;
-    try {
-      const raw = localStorage.getItem(LOCAL_SAVE_PREFIX + puzzleId);
-      if (raw) {
-        const saved = JSON.parse(raw) as SavePayload;
-        progress = {
-          boardState: saved.boardState,
-          notes: saved.notesSnapshot,
-          timeSeconds: saved.timeSeconds,
-        };
-      }
-    } catch {
-      // ignore bad data
-    }
+    const local = getLocalProgress(puzzleId);
+    const progress = local
+      ? { boardState: local.boardState, notes: local.notes, timeSeconds: local.timeSeconds }
+      : null;
 
     return { puzzle, progress };
   }
@@ -184,7 +217,7 @@ interface GameViewProps {
     difficultyLabel: string;
     techniquesRequired: string;
   };
-  progress: { boardState: string; notes: string; timeSeconds: number } | null;
+  progress: { boardState: string; notes: string; timeSeconds: number; updatedAt?: string | null } | null;
 }
 
 function GameView({ puzzle, progress }: GameViewProps) {
@@ -202,11 +235,11 @@ function GameView({ puzzle, progress }: GameViewProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(state),
       }).catch(() => {
-        // Not signed in or network error — save locally
+        // Not signed in or network error — save locally with timestamp
         try {
           localStorage.setItem(
             LOCAL_SAVE_PREFIX + state.puzzleId,
-            JSON.stringify(state),
+            JSON.stringify({ ...state, savedAt: new Date().toISOString() }),
           );
         } catch {
           // storage full — ignore

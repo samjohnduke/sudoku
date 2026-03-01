@@ -11,21 +11,30 @@ interface SaveGameBody {
   notesSnapshot: string;
   timeSeconds: number;
   completed: boolean;
+  /** ISO timestamp from the client. When present (offline sync), the server
+   *  will only write if this is newer than the existing `updated_at`. */
+  savedAt?: string;
 }
 
 function validateSaveBody(data: unknown): data is SaveGameBody {
   if (typeof data !== "object" || data === null) return false;
   const obj = data as Record<string, unknown>;
-  return (
-    typeof obj.puzzleId === "string" &&
-    obj.puzzleId.length > 0 &&
-    typeof obj.boardState === "string" &&
-    typeof obj.notesSnapshot === "string" &&
-    typeof obj.timeSeconds === "number" &&
-    Number.isFinite(obj.timeSeconds) &&
-    obj.timeSeconds >= 0 &&
-    typeof obj.completed === "boolean"
-  );
+  if (
+    typeof obj.puzzleId !== "string" ||
+    obj.puzzleId.length === 0 ||
+    typeof obj.boardState !== "string" ||
+    typeof obj.notesSnapshot !== "string" ||
+    typeof obj.timeSeconds !== "number" ||
+    !Number.isFinite(obj.timeSeconds) ||
+    obj.timeSeconds < 0 ||
+    typeof obj.completed !== "boolean"
+  ) {
+    return false;
+  }
+  if (obj.savedAt !== undefined && typeof obj.savedAt !== "string") {
+    return false;
+  }
+  return true;
 }
 
 export async function action({ request, context }: ActionFunctionArgs) {
@@ -51,6 +60,8 @@ export async function action({ request, context }: ActionFunctionArgs) {
     );
   }
 
+  const now = new Date().toISOString();
+
   const existing = await db
     .select()
     .from(userStats)
@@ -63,6 +74,18 @@ export async function action({ request, context }: ActionFunctionArgs) {
     .get();
 
   if (existing) {
+    // ── Conflict resolution for offline syncs ──
+    if (body.savedAt) {
+      // Never overwrite a completed puzzle with in-progress data
+      if (existing.completedAt && !body.completed) {
+        return apiSuccess({ skipped: true });
+      }
+      // Skip if server has a newer update
+      if (existing.updatedAt && body.savedAt <= existing.updatedAt) {
+        return apiSuccess({ skipped: true });
+      }
+    }
+
     await db
       .update(userStats)
       .set({
@@ -70,6 +93,7 @@ export async function action({ request, context }: ActionFunctionArgs) {
         notesSnapshot: body.notesSnapshot,
         timeSeconds: body.timeSeconds,
         completedAt: body.completed ? new Date().toISOString() : null,
+        updatedAt: now,
       })
       .where(eq(userStats.id, existing.id));
   } else {
@@ -77,11 +101,12 @@ export async function action({ request, context }: ActionFunctionArgs) {
       id: crypto.randomUUID(),
       userId: user.id,
       puzzleId: body.puzzleId,
-      startedAt: new Date().toISOString(),
+      startedAt: now,
       boardState: body.boardState,
       notesSnapshot: body.notesSnapshot,
       timeSeconds: body.timeSeconds,
       completedAt: body.completed ? new Date().toISOString() : null,
+      updatedAt: now,
     });
   }
 

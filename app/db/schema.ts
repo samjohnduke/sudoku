@@ -86,6 +86,7 @@ export const userStats = sqliteTable("user_stats", {
   assistsUsed: text("assists_used"), // JSON
   notesSnapshot: text("notes_snapshot"), // JSON for resume
   boardState: text("board_state"), // 81-char current state
+  updatedAt: text("updated_at"), // ISO timestamp for sync conflict resolution
 });
 
 export const userSettings = sqliteTable("user_settings", {

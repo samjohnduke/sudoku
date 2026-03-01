@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
+- Generate worker types in CI before typecheck by @samjohnduke ([068e6dc](https://github.com/samjohnduke/sudoku/commit/068e6dcdd0a9d296da9bfdf0801de22b1cebbb00))
+
 - Add w-full to page containers so children fill width by @samjohnduke ([7284532](https://github.com/samjohnduke/sudoku/commit/7284532a7f5629bfb01880ec770d82c449d4d139))
 
 - Set stats page to max-w-xl to match learn page width by @samjohnduke ([4417efe](https://github.com/samjohnduke/sudoku/commit/4417efe3083fe5031ad0606731a441dbf420fd86))
@@ -32,6 +34,8 @@ All notable changes to this project will be documented in this file.
 
 
 ### Documentation
+
+- Update changelog [skip ci] by @github-actions[bot] ([4a265b1](https://github.com/samjohnduke/sudoku/commit/4a265b1e3771fc0b5ba77a45cb220352e533e6a3))
 
 - Add user menu design and implementation plan by @samjohnduke ([db21241](https://github.com/samjohnduke/sudoku/commit/db212413aa65516f5c35a4e67adcbb73b0d33ef0))
 

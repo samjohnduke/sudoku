@@ -23,6 +23,10 @@ All notable changes to this project will be documented in this file.
 
 ### Documentation
 
+- Add security policy for vulnerability reporting by @samjohnduke ([418f340](https://github.com/samjohnduke/sudoku/commit/418f3404a4f56bfaa99e199d69431bdae9b7d0c5))
+
+- Update changelog [skip ci] by @github-actions[bot] ([2f08549](https://github.com/samjohnduke/sudoku/commit/2f0854981644740ee4af97c8439f49c7fb4ab31a))
+
 - Update changelog [skip ci] by @github-actions[bot] ([120b8f3](https://github.com/samjohnduke/sudoku/commit/120b8f373474364212777615407d21925d24ef5a))
 
 - Add TODO.md with application review findings by @samjohnduke ([1da8501](https://github.com/samjohnduke/sudoku/commit/1da85014f3b89953f92cdd73810c1a78b0d43e9c))

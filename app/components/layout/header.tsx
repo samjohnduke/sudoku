@@ -1,6 +1,15 @@
-import { BarChart2, BookOpen, Settings } from "lucide-react";
-import { Link, useLocation } from "react-router";
+import { BarChart2, BookOpen, CircleUser, LogOut, Settings } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router";
 import { Logo } from "~/components/logo";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "~/components/ui/dropdown-menu";
+import { authClient } from "~/lib/auth/auth-client";
 import { cn } from "~/lib/utils";
 
 interface HeaderProps {
@@ -14,15 +23,25 @@ interface NavItem {
   useLogo?: boolean;
 }
 
-const NAV_ITEMS: NavItem[] = [
+const DESKTOP_NAV_ITEMS: NavItem[] = [
   { to: "/", label: "Play", useLogo: true },
   { to: "/bible", label: "Learn", icon: BookOpen },
-  { to: "/stats", label: "Stats", icon: BarChart2 },
-  { to: "/settings", label: "Settings", icon: Settings },
+];
+
+const MOBILE_NAV_ITEMS: NavItem[] = [
+  { to: "/", label: "Play", useLogo: true },
+  { to: "/bible", label: "Learn", icon: BookOpen },
+  { to: "/account", label: "Account", icon: CircleUser },
 ];
 
 export function Header({ user }: HeaderProps) {
   const location = useLocation();
+  const navigate = useNavigate();
+
+  async function handleSignOut() {
+    await authClient.signOut();
+    navigate("/");
+  }
 
   const isPlayPage = location.pathname.startsWith("/play/");
   if (isPlayPage) return null;
@@ -40,7 +59,7 @@ export function Header({ user }: HeaderProps) {
           </Link>
 
           <nav className="flex items-center gap-1">
-            {NAV_ITEMS.map((item) => (
+            {DESKTOP_NAV_ITEMS.map((item) => (
               <Link
                 key={item.to}
                 to={item.to}
@@ -57,27 +76,47 @@ export function Header({ user }: HeaderProps) {
             ))}
           </nav>
 
-          <div className="flex items-center gap-2">
-            {user ? (
-              <span className="text-sm text-muted-foreground">
-                {user.name || "Player"}
-              </span>
-            ) : (
-              <Link
-                to="/auth/signin"
-                className="text-sm text-primary hover:underline"
-              >
-                Sign in
-              </Link>
-            )}
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger className="rounded-full p-1.5 text-muted-foreground hover:text-foreground transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring">
+              <CircleUser className="size-5" />
+              <span className="sr-only">Account menu</span>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              {user ? (
+                <>
+                  <DropdownMenuLabel>{user.name || "Player"}</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/stats"><BarChart2 className="size-4" /> Stats</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/settings"><Settings className="size-4" /> Settings</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem variant="destructive" onSelect={handleSignOut}>
+                    <LogOut className="size-4" /> Sign Out
+                  </DropdownMenuItem>
+                </>
+              ) : (
+                <>
+                  <DropdownMenuItem asChild>
+                    <Link to="/auth/signin">Sign In</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/settings"><Settings className="size-4" /> Settings</Link>
+                  </DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </header>
 
       {/* Mobile bottom nav */}
       <nav className="sm:hidden fixed bottom-0 left-0 right-0 border-t border-border/50 bg-background/95 backdrop-blur-md z-50">
         <div className="flex justify-around py-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))]">
-          {NAV_ITEMS.map((item) => {
+          {MOBILE_NAV_ITEMS.map((item) => {
             const isActive =
               location.pathname === item.to ||
               (item.to === "/bible" && location.pathname.startsWith("/bible"));

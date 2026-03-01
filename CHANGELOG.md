@@ -6,6 +6,16 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
+- Add w-full to page containers so children fill width by @samjohnduke ([7284532](https://github.com/samjohnduke/sudoku/commit/7284532a7f5629bfb01880ec770d82c449d4d139))
+
+- Set stats page to max-w-xl to match learn page width by @samjohnduke ([4417efe](https://github.com/samjohnduke/sudoku/commit/4417efe3083fe5031ad0606731a441dbf420fd86))
+
+- Restore stats page to max-w-2xl for charts and tables by @samjohnduke ([020102d](https://github.com/samjohnduke/sudoku/commit/020102da7f9c5d88c295909fdbef85df6ed420bc))
+
+- Unify page widths to match learn page (max-w-xl) by @samjohnduke ([38b1234](https://github.com/samjohnduke/sudoku/commit/38b1234a1a93c954e4af70d59c2fa3ea978a9e7a))
+
+- Improve mobile nav active state and sign-out button cursor by @samjohnduke ([fe4ad11](https://github.com/samjohnduke/sudoku/commit/fe4ad1177a159930688d6559f56c1bf2422065e9))
+
 - Use solution-validated board for hint computation by @samjohnduke ([e37610b](https://github.com/samjohnduke/sudoku/commit/e37610bd7ab1cd84e09c8833a8dd58ef8e8cf4e2))
 
 - Resolve TypeScript errors in offline cache access by @samjohnduke ([5233699](https://github.com/samjohnduke/sudoku/commit/5233699a4bf6abb54643ee642dd74fdd1fd1d0fb))
@@ -23,6 +33,10 @@ All notable changes to this project will be documented in this file.
 
 ### Documentation
 
+- Add user menu design and implementation plan by @samjohnduke ([db21241](https://github.com/samjohnduke/sudoku/commit/db212413aa65516f5c35a4e67adcbb73b0d33ef0))
+
+- Update changelog [skip ci] by @github-actions[bot] ([d8d5a70](https://github.com/samjohnduke/sudoku/commit/d8d5a70433f4586680e9cf9f5a0ab72e16ba6c90))
+
 - Add security policy for vulnerability reporting by @samjohnduke ([418f340](https://github.com/samjohnduke/sudoku/commit/418f3404a4f56bfaa99e199d69431bdae9b7d0c5))
 
 - Update changelog [skip ci] by @github-actions[bot] ([2f08549](https://github.com/samjohnduke/sudoku/commit/2f0854981644740ee4af97c8439f49c7fb4ab31a))
@@ -33,6 +47,12 @@ All notable changes to this project will be documented in this file.
 
 
 ### Features
+
+- Add account page route for mobile user menu by @samjohnduke ([623906f](https://github.com/samjohnduke/sudoku/commit/623906f136a4a26f5b8b43f64ffbc29f18726393))
+
+- Add desktop dropdown menu and update mobile nav tabs by @samjohnduke ([ca539d7](https://github.com/samjohnduke/sudoku/commit/ca539d7c56759a9c5e338909e2327dac206a54a7))
+
+- Add DropdownMenu UI component by @samjohnduke ([74a2006](https://github.com/samjohnduke/sudoku/commit/74a2006c0ebc95ee5080e393eb3444b131dffdce))
 
 - Add automated changelog generation with git-cliff by @samjohnduke ([96383b9](https://github.com/samjohnduke/sudoku/commit/96383b97dc11969b10b33558b578730da1e90331))
 

@@ -786,13 +786,14 @@ export function useGame(options: UseGameOptions) {
 
   // -----------------------------------------------------------------------
   // Save timer on visibility change (user leaves/backgrounds the app)
+  // and on unmount (user navigates away via in-app link)
   // -----------------------------------------------------------------------
   const gameRef = useRef(game);
   gameRef.current = game;
 
   useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.hidden && !gameRef.current.isComplete) {
+    const save = () => {
+      if (!gameRef.current.isComplete) {
         onSaveRef.current({
           puzzleId,
           boardState: serializeBoard(gameRef.current.current),
@@ -803,8 +804,17 @@ export function useGame(options: UseGameOptions) {
       }
     };
 
+    const handleVisibilityChange = () => {
+      if (document.hidden) save();
+    };
+
     document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+
+    // Save on unmount (e.g. navigating away via Back link)
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      save();
+    };
   }, [puzzleId]);
 
   return {

@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
+- Save game progress on navigation away and register missing puzzles route by @samjohnduke ([1dc1ea5](https://github.com/samjohnduke/sudoku/commit/1dc1ea574a1ebbae8a9153f8270ba1d25c1c375b))
+
 - Await requestHandler to resolve Promise<Response> before accessing .status by @samjohnduke ([d184a53](https://github.com/samjohnduke/sudoku/commit/d184a535fec1d4b4c48d8fbf5c3c63c591e7586e))
 
 - Persist game timer when user leaves the page by @samjohnduke ([174c895](https://github.com/samjohnduke/sudoku/commit/174c89547e9c1c64082a59faceb00e65a170349f))
@@ -48,6 +50,8 @@ All notable changes to this project will be documented in this file.
 
 
 ### Documentation
+
+- Update changelog [skip ci] by @github-actions[bot] ([7913210](https://github.com/samjohnduke/sudoku/commit/7913210b6d2c1fb2ba3841993588cfa3a8eda05f))
 
 - Update changelog [skip ci] by @github-actions[bot] ([c0359e7](https://github.com/samjohnduke/sudoku/commit/c0359e73ff8c4fa21a4555cddb086b0d56bb64c3))
 

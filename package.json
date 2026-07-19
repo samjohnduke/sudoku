@@ -9,7 +9,10 @@
     "dev": "react-router dev",
     "postinstall": "npm run cf-typegen",
     "preview": "npm run build && vite preview",
-    "typecheck": "npm run cf-typegen && react-router typegen && tsc -b"
+    "typecheck": "npm run cf-typegen && react-router typegen && tsc -b",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate:local": "wrangler d1 migrations apply supersudoku-db --local",
+    "db:migrate:production": "wrangler d1 migrations apply supersudoku-db --remote"
   },
   "dependencies": {
     "@better-auth/passkey": "^1.4.19",

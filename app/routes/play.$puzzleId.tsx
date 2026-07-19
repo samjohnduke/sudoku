@@ -214,14 +214,12 @@ function loadSettings(): GameSettings {
 
 /** Map NumberPad modes to useGame modes */
 function padModeToGameMode(m: PadInputMode): GameInputMode {
-  if (m === "corner") return "note";
-  if (m === "center") return "center-note";
+  if (m === "notes") return "note";
   return "value";
 }
 
 function gameModeTopadMode(m: GameInputMode): PadInputMode {
-  if (m === "note") return "corner";
-  if (m === "center-note") return "center";
+  if (m === "note" || m === "center-note") return "notes";
   return "value";
 }
 
@@ -336,6 +334,16 @@ function GameView({ puzzle, progress }: GameViewProps) {
 
   const padMode = gameModeTopadMode(mode);
 
+  // Numbers that have all 9 instances placed on the board
+  const completedNumbers = new Set<number>();
+  const counts = new Uint8Array(10);
+  for (const v of game.current) {
+    if (v > 0) counts[v]++;
+  }
+  for (let n = 1; n <= 9; n++) {
+    if (counts[n] >= 9) completedNumbers.add(n);
+  }
+
   return (
     <div className="min-h-dvh bg-background text-foreground flex flex-col">
       {/* Floating info bar */}
@@ -419,34 +427,22 @@ function GameView({ puzzle, progress }: GameViewProps) {
         {/* Bottom section: hints + number pad */}
         {!game.isComplete ? (
           <div className="w-full max-w-md flex flex-col gap-3 mt-3 sm:mt-0">
-            {/* Hint area */}
-            {settings.hintsEnabled ? (
-              <>
-                {!hint ? (
-                  <button
-                    onClick={handleHint}
-                    className="self-center text-sm text-muted-foreground hover:text-foreground transition-colors py-1"
-                  >
-                    Show hint
-                  </button>
-                ) : null}
-                {hint ? (
-                  <div className="px-3 py-2.5 rounded-xl border border-amber-300/50 dark:border-amber-600/30 bg-amber-50/50 dark:bg-amber-950/20 animate-fade-in">
-                    <p className="text-sm font-medium">
-                      {TECHNIQUE_DISPLAY_NAMES[hint.technique]}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {hint.description}
-                    </p>
-                    <Link
-                      to={`/bible/${hint.technique}`}
-                      className="text-xs text-primary hover:underline mt-1 inline-block"
-                    >
-                      Learn this technique
-                    </Link>
-                  </div>
-                ) : null}
-              </>
+            {/* Hint card (shown when active) */}
+            {settings.hintsEnabled && hint ? (
+              <div className="px-3 py-2.5 rounded-xl border border-amber-300/50 dark:border-amber-600/30 bg-amber-50/50 dark:bg-amber-950/20 animate-fade-in">
+                <p className="text-sm font-medium">
+                  {TECHNIQUE_DISPLAY_NAMES[hint.technique]}
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {hint.description}
+                </p>
+                <Link
+                  to={`/bible/${hint.technique}`}
+                  className="text-xs text-primary hover:underline mt-1 inline-block"
+                >
+                  Learn this technique
+                </Link>
+              </div>
             ) : null}
 
             {/* Number Pad */}
@@ -457,19 +453,30 @@ function GameView({ puzzle, progress }: GameViewProps) {
               onModeChange={(m) => setMode(padModeToGameMode(m))}
               onUndo={undo}
               onRedo={redo}
+              completedNumbers={completedNumbers}
             />
 
-            {/* Reset button */}
-            <button
-              onClick={() => {
-                if (window.confirm("Reset this puzzle? All progress will be lost.")) {
-                  reset();
-                }
-              }}
-              className="self-center text-xs text-muted-foreground hover:text-foreground transition-colors py-1"
-            >
-              Reset puzzle
-            </button>
+            {/* Hint + Reset on same line */}
+            <div className="flex items-center justify-center gap-4">
+              {settings.hintsEnabled && !hint ? (
+                <button
+                  onClick={handleHint}
+                  className="text-xs text-muted-foreground hover:text-foreground transition-colors py-1"
+                >
+                  Show hint
+                </button>
+              ) : null}
+              <button
+                onClick={() => {
+                  if (window.confirm("Reset this puzzle? All progress will be lost.")) {
+                    reset();
+                  }
+                }}
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors py-1"
+              >
+                Reset puzzle
+              </button>
+            </div>
           </div>
         ) : null}
       </main>

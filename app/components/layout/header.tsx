@@ -50,12 +50,9 @@ export function Header({ user }: HeaderProps) {
     <>
       {/* Desktop header */}
       <header className="hidden sm:block border-b border-border/50 bg-background/80 backdrop-blur-md sticky top-0 z-50">
-        <div className="max-w-3xl mx-auto px-6 h-14 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2">
+        <div className="max-w-3xl mx-auto px-6 h-14 flex items-center">
+          <Link to="/" className="flex items-center mr-1">
             <Logo size={22} className="text-primary" />
-            <span className="font-serif italic text-lg text-foreground">
-              super sudoku
-            </span>
           </Link>
 
           <nav className="flex items-center gap-1">
@@ -76,6 +73,7 @@ export function Header({ user }: HeaderProps) {
             ))}
           </nav>
 
+          <div className="ml-auto" />
           <DropdownMenu>
             <DropdownMenuTrigger className="rounded-full p-1.5 text-muted-foreground hover:text-foreground transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring">
               <CircleUser className="size-5" />

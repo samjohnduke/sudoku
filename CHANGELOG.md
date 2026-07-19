@@ -51,6 +51,8 @@ All notable changes to this project will be documented in this file.
 
 ### Documentation
 
+- Update changelog [skip ci] by @github-actions[bot] ([6413578](https://github.com/samjohnduke/sudoku/commit/6413578ec561a863a3e3719cf268ca513764a250))
+
 - Update changelog [skip ci] by @github-actions[bot] ([7913210](https://github.com/samjohnduke/sudoku/commit/7913210b6d2c1fb2ba3841993588cfa3a8eda05f))
 
 - Update changelog [skip ci] by @github-actions[bot] ([c0359e7](https://github.com/samjohnduke/sudoku/commit/c0359e73ff8c4fa21a4555cddb086b0d56bb64c3))
